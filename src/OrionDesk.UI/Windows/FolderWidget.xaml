@@ -8,6 +8,12 @@
         Drop="OnDrop"
         DragOver="OnDragOver">
     <Window.Resources>
+        <!-- 覆盖系统高亮色（焦点/非焦点选中都用深色） -->
+        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF2A2A2A"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#FF2A2A2A"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="White"/>
+
         <!-- TreeView 样式（禁用内置滚动，由外层 ScrollViewer 控制） -->
         <Style x:Key="TreeViewStyle" TargetType="TreeView">
             <Setter Property="Background" Value="Transparent"/>
@@ -37,11 +43,18 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
+                                    <!-- 选中高亮条（左侧竖线） -->
+                                    <Border x:Name="SelectionBar" Grid.Column="0"
+                                            Width="3" CornerRadius="1.5"
+                                            Background="Transparent"
+                                            Margin="0,2,4,2"/>
+
                                     <!-- 展开/折叠按钮 -->
-                                    <ToggleButton x:Name="Expander" ClickMode="Press"
+                                    <ToggleButton x:Name="Expander" ClickMode="Press" Grid.Column="1"
                                                   IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
                                                   Visibility="{Binding HasItems, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVis}}"
                                                   Background="Transparent" BorderThickness="0"
@@ -65,7 +78,7 @@
                                     </ToggleButton>
 
                                     <!-- 内容 -->
-                                    <ContentPresenter x:Name="PART_Header" Grid.Column="1"
+                                    <ContentPresenter x:Name="PART_Header" Grid.Column="2"
                                                       ContentSource="Header"
                                                       VerticalAlignment="Center"/>
                                 </Grid>
@@ -79,14 +92,24 @@
                                 <Setter TargetName="ItemsHost" Property="Visibility" Value="Visible"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                                <Setter TargetName="SelectionBar" Property="Background" Value="{StaticResource AccentColor}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#FF2A2A2A"/>
                             </Trigger>
+                            <!-- 失去焦点时选中项也保持深色 -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                    <Condition Property="IsSelectionActive" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="SelectionBar" Property="Background" Value="{StaticResource AccentColor}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#FF2A2A2A"/>
+                            </MultiTrigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsMouseOver" Value="True"/>
                                     <Condition Property="IsSelected" Value="False"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="Bd" Property="Background" Value="#15FFFFFF"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#10FFFFFF"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
