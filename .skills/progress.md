@@ -358,3 +358,88 @@
 
 ### Modified
 - MainWindow.xaml.cs - 托盘菜单添加"日历事项"、CreateWidgetWindow 注册
+
+### 自定义暗色控件
+
+### Completed
+- DarkComboBox 自定义暗色下拉框（UserControl，Popup + ListBox，替代标准 ComboBox 白底白字问题）
+- DarkDatePicker 自定义暗色日期选择器（UserControl，TextBox + Calendar 弹出层）
+- InputDialog 通用输入对话框
+- App.xaml 新增 DarkComboBoxItemStyle（ListBoxItem 暗色样式）
+- App.xaml 新增 DarkDatePickerStyle
+- EventEditWindow/QuickToolEditWindow 全部切换为 DarkComboBox
+- EventEditWindow 日期选择切换为 DarkDatePicker
+
+### Added
+- Controls/DarkComboBox.xaml/.cs - 自定义暗色下拉框控件
+- Controls/DarkDatePicker.xaml/.cs - 自定义暗色日期选择器控件
+- Windows/InputDialog.xaml/.cs - 通用输入对话框
+
+### Modified
+- App.xaml - 添加 DarkComboBoxItemStyle、DarkDatePickerStyle
+- EventEditWindow.xaml/.cs - 使用 DarkComboBox 和 DarkDatePicker
+- QuickToolEditWindow.xaml/.cs - 使用 DarkComboBox
+
+### UI 修复
+
+### Completed
+- 文件夹映射子目录缩进（ItemsPresenter Margin=16,0,0,0）
+- 快捷工具锁图标切换修复（Lock_Click 添加 UpdateLockButton 调用）
+- 日历编辑对话框时间区域布局优化（Grid 4列布局替代 Margin 定位）
+- 时间输入框宽度调整（48px → 60px）
+- CMD 设置窗口添加标题文字、滚动条使用 DarkScrollViewerStyle
+- CMD 启动器图标改为白色
+
+### Modified
+- FolderWidget.xaml - ItemsPresenter 添加 Margin
+- QuickToolsWidget.xaml.cs - Lock_Click 添加 UpdateLockButton
+- EventEditWindow.xaml - 时间布局重构、控件样式优化
+- CmdLauncherSettingsWindow.xaml - 标题、滚动条修复
+- CmdLauncherWidget.xaml - 图标 Foreground=White
+
+### 调整大小吸附
+
+### Completed
+- BaseWidgetWindow 新增调整大小时右/下边缘自动吸附逻辑
+- CalculateResizeSnap 方法（遍历其他组件边缘对齐）
+- _isResizing 标志防重入
+- TryResizeSnap 单次吸附计算
+
+### Modified
+- BaseWidgetWindow.cs - OnSizeChanged 添加吸附逻辑、新增 CalculateResizeSnap/TryResizeSnap
+
+### CMD 启动器组件
+
+### Completed
+- CmdLauncherWidget 大图标组件（灰色圆角背景 + 白色图标）
+- 点击启动 CMD 并自动执行命令（WorkingDirectory=C:\WINDOWS\system32）
+- CmdLauncherSettingsWindow（设置名称/图标/命令/起始目录）
+- 右键菜单"设置"打开设置窗口
+- 图标自定义（emoji 输入，存入 Settings["icon"]）
+
+### Added
+- CmdLauncherWidget.xaml/.cs - CMD 启动器组件
+- CmdLauncherSettingsWindow.xaml/.cs - CMD 启动器设置对话框
+
+### Modified
+- MainWindow.xaml.cs - 托盘菜单添加"CMD 启动器"、CreateWidgetWindow 注册
+
+### 事项编辑/删除
+
+### Completed
+- EventListWindow 事项列表弹窗（点击有事项的日期时显示）
+- 每项显示颜色条 + 标题 + 详情 + ✏编辑 🗑删除按钮
+- 底部"＋ 添加事项"按钮
+- CalendarWidget DayButton_Click 逻辑重构（有事项→列表，无事项→添加）
+
+### Added
+- EventListWindow.xaml/.cs - 事项列表窗口
+
+### Modified
+- CalendarWidget.xaml.cs - DayButton_Click 重构、新增 OpenEditWindow 重载
+
+### 发布与文档
+
+### Completed
+- dotnet publish 生成 72MB 自包含单文件 exe
+- README.md 全面更新（新增组件、技术栈、项目结构、Controls 目录）

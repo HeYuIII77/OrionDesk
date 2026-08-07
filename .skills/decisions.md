@@ -247,3 +247,43 @@
 **Impact**: README.md 更新许可证信息，新建 LICENSE 文件
 
 **Status**: Active
+
+### Decision: 快捷工具默认预置 + 可自由编辑删除
+
+**Reason**: 用户要求默认提供常用工具，但所有工具（包括预置的）都可以自由编辑和删除
+
+**Impact**: 首次加载写入 16 个预置工具，移除 IsPreset 限制，编辑/删除对所有工具生效
+
+**Status**: Active
+
+### Decision: SVN 支持集成到现有 GitSyncWidget
+
+**Reason**: 用户公司同时使用 Git 和 SVN，需要在同一组件中统一展示
+
+**Impact**: GitSyncService 扩展 SVN 发现和检查逻辑，新增 VcsType 枚举，UI 显示 [Git]/[SVN] 标签
+
+**Status**: Active
+
+### Decision: 日历事项使用 JSON 存储
+
+**Reason**: 与现有组件一致，无需引入 SQLite 依赖
+
+**Impact**: 事项存储在 WidgetConfig.Settings["events"] JSON 数组中
+
+**Status**: Active
+
+### Decision: 自定义 DarkComboBox 和 DarkDatePicker 控件
+
+**Reason**: WPF 标准 ComboBox/DatePicker 的弹出层无法用样式覆盖暗色主题，白底白字问题无法解决
+
+**Impact**: 创建 Controls/DarkComboBox.xaml 和 DarkDatePicker.xaml，替换所有下拉框和日期选择器
+
+**Status**: Active
+
+### Decision: CMD 启动器独立组件
+
+**Reason**: 用户需要桌面大图标一键启动 CMD 并自动执行命令（如 claude），可自定义图标/名称/命令/起始目录
+
+**Impact**: 新增 CmdLauncherWidget 组件，灰色圆角背景 + 白色图标，右键设置
+
+**Status**: Active
