@@ -1,0 +1,217 @@
+# Design Decisions
+
+## 2026-08-06
+
+### Decision: 使用 WorkerW 窗口技术实现桌面层级
+
+**Reason**: 需要将组件放在桌面图标之上、应用程序之下，WorkerW 是实现这一效果的标准方法
+
+**Impact**: 所有组件窗口都需要继承 BaseWidgetWindow，通过 Win32 API 控制层级
+
+**Status**: Active
+
+### Decision: 使用 JSON 存储配置
+
+**Reason**: 简单直接，适合配置类数据，无需额外依赖
+
+**Impact**: 配置文件存储在 %LocalAppData%\OrionDesk\config.json
+
+**Status**: Active
+
+### Decision: 使用 PerformanceCounter 获取系统监控数据
+
+**Reason**: .NET 原生 API，无需额外依赖，功能够用
+
+**Impact**: 需要添加 System.Diagnostics.PerformanceCounter NuGet 包
+
+**Status**: Active
+
+### Decision: 实现单例模式
+
+**Reason**: 避免多个实例同时运行造成冲突
+
+**Impact**: 使用 Mutex 实现，启动时检查是否已有实例运行
+
+**Status**: Active
+
+### Decision: 组件支持锁定功能
+
+**Reason**: 防止误操作移动或调整组件大小
+
+**Impact**: 所有组件右上角添加锁定按钮，锁定后无法拖拽和调整大小
+
+**Status**: Active
+
+## 2026-08-06 下午
+
+### Decision: 使用和风天气 QWeather API 集成天气
+
+**Reason**: 用户提供 API Key，免费版每天 5000 次调用
+
+**Impact**: 时钟组件显示天气，需要设置页面配置 API Key 和 API Host
+
+**Status**: Active
+
+### Decision: 使用 ip-api.com 进行 IP 定位
+
+**Reason**: 和风天气 GeoAPI 对桌面应用有安全限制（403），ip-api.com 免费无需 Key
+
+**Impact**: 通过 IP 获取坐标，再用坐标查询天气
+
+**Status**: Active
+
+### Decision: 配置保存使用同步写入（SaveSync）
+
+**Reason**: 异步保存在程序退出时可能未完成，导致配置丢失
+
+**Impact**: 关键保存点使用同步写入 + 原子替换（tmp+rename+bak）
+
+**Status**: Active
+
+### Decision: 桌面图标智能隐藏策略
+
+**Reason**: 启动器中的应用在 OrionDesk 运行时隐藏桌面图标，退出时恢复
+
+**Impact**: 启动时隐藏名单图标，退出时全部恢复，使用备份文件夹存储
+
+**Status**: Active
+
+### Decision: 组件初始化从 Loaded 改为构造函数直接调用
+
+**Reason**: 隐藏窗口的 Loaded 事件不触发，导致组件不初始化
+
+**Impact**: 所有组件在构造函数中直接初始化
+
+**Status**: Active
+
+### Decision: System.Text.Json JsonElement 类型兼容
+
+**Reason**: 反序列化后 Settings 值是 JsonElement，Convert.ToXxx 无法转换
+
+**Impact**: 添加 ToBool/ToInt/ToDouble/ToStr 辅助方法
+
+**Status**: Active
+
+## 2026-08-06 晚间
+
+### Decision: 组件固定在桌面图标层，不随鼠标悬浮提升
+
+**Reason**: 用户需求，简化交互逻辑，避免 z-order 切换导致的 bug
+
+**Impact**: 移除 OnMouseEnter/OnMouseLeave 的 SetWindowPos 调用，只保留透明度动画
+
+**Status**: Active
+
+### Decision: 配置保存全部改为同步
+
+**Reason**: 异步保存在进程退出/关机时可能未完成，导致配置丢失
+
+**Impact**: 所有 SaveAsync 替换为 Save，移除 Task.Run 包装
+
+**Status**: Active
+
+### Decision: .gold 黄金备份（首次加载创建，永不覆盖）
+
+**Reason**: .bak 每次保存都覆盖，如果保存时数据已损坏，.bak 也被覆盖为坏数据
+
+**Impact**: .gold 在首次加载成功时创建，作为最后的恢复手段；.bak 仅在主文件有效时才覆盖
+
+**Status**: Active
+
+### Decision: IsRestoring 标志防止恢复期间保存
+
+**Reason**: 组件初始化时 SizeChanged 等事件会触发 SavePosition，在所有组件恢复完之前保存会覆盖为不完整配置
+
+**Impact**: WidgetManager.IsRestoring=true 期间所有 Save 调用被跳过，恢复完成后统一保存一次
+
+**Status**: Active
+
+### Decision: Closing 事件统一处理退出和关机
+
+**Reason**: Windows 关机时 Closed 事件先于 SessionEnding 触发，_isClosingAll 还是 false 导致组件删除配置
+
+**Impact**: 在 Closing 事件中设 _isClosingAll=true 并保存配置，后续 Closed 事件不再删除配置
+
+**Status**: Active
+
+### Decision: 设置保存后立刻刷新天气
+
+**Reason**: 用户体验：保存城市设置后应该立刻看到新城市的天气，而不是等下一个定时器周期
+
+**Impact**: ClockWidget 添加 RefreshWeather 公开方法，MainWindow 保存后遍历所有活动组件调用刷新
+
+**Status**: Active
+
+### Decision: 天气支持手动选择城市（内置城市数据库）
+
+**Reason**: VPN 导致 IP 定位不准确，用户需要手动指定天气城市；和风天气 GeoAPI 被安全限制（403），外部地理编码 API 访问受限，改用内置城市数据库
+
+**Impact**: 内置中国 130+ 主要城市坐标，设置页面输入城市名模糊搜索，配置文件存储 CityName/CityLat/CityLon，WeatherService 优先使用配置城市，未配置时回退到 IP 定位
+
+**Status**: Active
+
+## 2026-08-07
+
+### Decision: 移除节气功能
+
+**Reason**: 节气日期边界计算不准（简化日期范围算法误差），修复复杂度高，用户选择直接移除
+
+**Impact**: LunarCalendarService 移除 SolarTerms 数组和 GetCurrentSolarTerm 方法，时钟组件只显示农历
+
+**Status**: Active
+
+### Decision: App.xaml 集中管理全局样式
+
+**Reason**: 各组件各自定义 GlassBackground 等样式，值略有不同，维护困难
+
+**Impact**: 配色系统、按钮样式、输入框样式、进度条样式、锁定按钮样式统一在 App.xaml 定义
+
+**Status**: Active
+
+### Decision: 组件添加投影效果（DropShadowEffect）
+
+**Reason**: 组件平铺在桌面上缺乏层次感，需要视觉深度
+
+**Impact**: BaseWidgetWindow 构造函数添加 DropShadowEffect（黑色、模糊 10px、透明度 25%）
+
+**Status**: Active
+
+### Decision: 拖拽吸附对齐（8px 阈值）
+
+**Reason**: 用户需要精确排列多个组件（竖排/横排对齐）
+
+**Impact**: BaseWidgetWindow 添加静态组件注册表和吸附计算逻辑，支持左/右/上/下/中 10 种对齐方式
+
+**Status**: Active
+
+### Decision: 天气数据分层展示（摘要+ToolTip+详情弹窗）
+
+**Reason**: 时钟组件空间有限，不能塞太多文字；分层展示兼顾信息密度和界面简洁
+
+**Impact**: 主界面一行摘要（城市 天气 温度 空气等级），鼠标悬停 ToolTip 显示详细信息，右键菜单打开 WeatherDetailWindow 完整展示
+
+**Status**: Active
+
+### Decision: 天气 API 智能缓存策略
+
+**Reason**: 不同数据更新频率不同，统一刷新浪费 API 调用次数
+
+**Impact**: 实时天气+空气质量跟随 RefreshMinutes（默认 30 分钟），预报/天文/指数每天缓存一次，预警 15 分钟独立刷新
+
+**Status**: Active
+
+### Decision: 暗色滚动条统一样式
+
+**Reason**: 默认白色滚动条在深色背景上突兀，需要与整体 UI 风格一致
+
+**Impact**: App.xaml 定义 DarkScrollViewerStyle，半透明白色圆角滑块+透明轨道，应用到所有 ScrollViewer 和 TreeView
+
+**Status**: Active
+
+### Decision: 便携版发布（自包含单文件）
+
+**Reason**: 简化分发，用户无需安装 .NET 运行时，双击 exe 即可使用
+
+**Impact**: dotnet publish 生成 72MB 单文件 exe，包含 .NET 10 运行时 + WPF 框架
+
+**Status**: Active

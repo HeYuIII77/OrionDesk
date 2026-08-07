@@ -1,0 +1,123 @@
+<Window x:Class="OrionDesk.UI.Windows.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OrionDesk 设置"
+        Width="460" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResizeWithGrip"
+        Background="#FF1E1E21"
+        Foreground="White"
+        FontFamily="Segoe UI">
+    <Window.Resources>
+        <!-- 分组标题样式 -->
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- 标签样式 -->
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CCFFFFFF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- 搜索结果列表样式 -->
+        <Style x:Key="CityListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="#FF2D2D30"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#FF3F3F46"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="MaxHeight" Value="120"/>
+            <Setter Property="Padding" Value="2"/>
+        </Style>
+
+        <!-- 分隔线样式 -->
+        <Style x:Key="SeparatorStyle" TargetType="Border">
+            <Setter Property="Background" Value="#1AFFFFFF"/>
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Margin" Value="0,16"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#FF1E1E21" CornerRadius="0" Padding="24">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 标题 -->
+            <TextBlock Grid.Row="0" Text="设置" FontSize="20" FontWeight="SemiBold"
+                       Foreground="White" Margin="0,0,0,4"/>
+
+            <!-- 可滚动的内容区域 -->
+            <ScrollViewer Grid.Row="1" Style="{StaticResource DarkScrollViewerStyle}"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Margin="0,4,0,0">
+                <StackPanel>
+                    <!-- 天气城市 -->
+                    <TextBlock Text="天气城市" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBlock x:Name="CurrentCityText" Style="{StaticResource LabelStyle}"
+                               FontSize="11" Foreground="#FF88CCFF" Margin="0,0,0,8"
+                               Text="当前：自动定位（IP）"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="CitySearchBox" Grid.Column="0" Style="{StaticResource InputStyle}"
+                                 VerticalContentAlignment="Center"/>
+                        <Button x:Name="CitySearchButton" Grid.Column="1" Content="搜索"
+                                Style="{StaticResource ButtonStyle}"
+                                Click="CitySearchButton_Click" Margin="8,0,0,0" Padding="14,5"/>
+                    </Grid>
+                    <TextBlock x:Name="CitySearchStatus" Style="{StaticResource MutedTextStyle}"
+                               Margin="0,4,0,0"/>
+                    <ListBox x:Name="CityResultList" Style="{StaticResource CityListBoxStyle}"
+                             Margin="0,4,0,0" Visibility="Collapsed"
+                             SelectionChanged="CityResultList_SelectionChanged"
+                             DisplayMemberPath="DisplayText"/>
+                    <Button x:Name="ClearCityButton" Content="清除城市选择（恢复自动定位）"
+                            Style="{StaticResource SecondaryButtonStyle}" FontSize="11"
+                            Padding="10,4" Margin="0,6,0,0"
+                            Click="ClearCityButton_Click" Visibility="Collapsed"/>
+
+                    <!-- 分隔线 -->
+                    <Border Style="{StaticResource SeparatorStyle}"/>
+
+                    <!-- API 配置 -->
+                    <TextBlock Text="和风天气 API" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBlock Text="API Key" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+                    <TextBox x:Name="ApiKeyBox" Style="{StaticResource InputStyle}"/>
+                    <TextBlock Text="API Host（项目专属，如 m24d95fgre.re.qweatherapi.com）"
+                               Style="{StaticResource MutedTextStyle}" Margin="0,6,0,6"/>
+                    <TextBox x:Name="ApiHostBox" Style="{StaticResource InputStyle}"/>
+
+                    <!-- 分隔线 -->
+                    <Border Style="{StaticResource SeparatorStyle}"/>
+
+                    <!-- 刷新频率 -->
+                    <TextBlock Text="刷新频率" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBlock Text="天气刷新频率（分钟）" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+                    <TextBox x:Name="RefreshBox" Style="{StaticResource InputStyle}"
+                             Width="100" HorizontalAlignment="Left"/>
+                    <TextBlock Text="默认 30 分钟，最小 10 分钟"
+                               Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 按钮（固定在底部） -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button x:Name="SaveButton" Content="保存" Style="{StaticResource ButtonStyle}"
+                        Click="SaveButton_Click" Margin="0,0,8,0"/>
+                <Button x:Name="CancelButton" Content="取消" Style="{StaticResource SecondaryButtonStyle}"
+                        Click="CancelButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

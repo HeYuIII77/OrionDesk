@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OrionDesk.BLL/OrionDesk.BLL.csproj" />
+    <Project Path="src/OrionDesk.DAL/OrionDesk.DAL.csproj" />
+    <Project Path="src/OrionDesk.UI/OrionDesk.UI.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,159 @@
+<local:BaseWidgetWindow x:Class="OrionDesk.UI.Windows.LauncherWidget"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OrionDesk.UI.Windows"
+        mc:Ignorable="d"
+        Title="启动器"
+        Background="Transparent"
+        AllowDrop="True"
+        Drop="OnDrop"
+        DragOver="OnDragOver">
+    <Window.Resources>
+        <!-- 应用按钮样式（图标模式） -->
+        <Style x:Key="AppButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Padding="8,6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="#22FFFFFF"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="#18FFFFFF"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 列表行样式 -->
+        <Style x:Key="ListItemButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="6,4">
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="#22FFFFFF"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="#18FFFFFF"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 标题文本框样式（用于重命名） -->
+        <Style x:Key="TitleTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="MinWidth" Value="50"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Style="{StaticResource GlassBackground}">
+        <!-- 右键菜单 -->
+        <Border.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="重命名" Click="Rename_Click"/>
+                <Separator/>
+                <MenuItem x:Name="ViewModeIconsItem" Header="图标视图" IsCheckable="True" IsChecked="True" Click="ViewModeIcons_Click"/>
+                <MenuItem x:Name="ViewModeListItem" Header="列表视图" IsCheckable="True" Click="ViewModeList_Click"/>
+                <Separator/>
+                <MenuItem Header="清除所有" Click="ClearAll_Click"/>
+                <Separator/>
+                <MenuItem x:Name="LockMenuItem" Header="锁定" Click="Lock_Click"/>
+                <Separator/>
+                <MenuItem Header="关闭组件" Click="Close_Click"/>
+            </ContextMenu>
+        </Border.ContextMenu>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 标题栏（包含锁定按钮和标题） -->
+            <Grid Grid.Row="0" Margin="0,0,0,4">
+                <!-- 锁定按钮 -->
+                <Button x:Name="LockButton" Content="🔓"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Style="{StaticResource LockButtonStyle}"
+                        Click="Lock_Click"
+                        ToolTip="锁定"/>
+
+                <!-- 标题（可编辑） -->
+                <TextBlock x:Name="TitleText" Text="启动器"
+                           Foreground="White" FontFamily="Segoe UI" FontSize="12"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Cursor="Hand" MouseLeftButtonDown="TitleText_MouseLeftButtonDown"/>
+                <TextBox x:Name="TitleTextBox" Text="启动器"
+                         Style="{StaticResource TitleTextBoxStyle}"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                         Visibility="Collapsed"
+                         KeyDown="TitleTextBox_KeyDown"
+                         LostFocus="TitleTextBox_LostFocus"/>
+            </Grid>
+
+            <!-- 提示文本 -->
+            <TextBlock x:Name="HintText" Text="拖拽应用到此处" Grid.Row="1"
+                       Foreground="#55FFFFFF" FontSize="11" FontFamily="Segoe UI"
+                       HorizontalAlignment="Center" Margin="0,0,0,4"/>
+
+            <!-- 应用内容区域（可滚动） -->
+            <ScrollViewer x:Name="ContentScroller" Grid.Row="2"
+                          Style="{StaticResource DarkScrollViewerStyle}"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          BorderThickness="0">
+                <!-- 图标模式面板 -->
+                <WrapPanel x:Name="IconPanel" Orientation="Horizontal"
+                           HorizontalAlignment="Center"/>
+            </ScrollViewer>
+
+            <!-- 列表模式面板（代码中动态添加到 ScrollViewer） -->
+        </Grid>
+    </Border>
+</local:BaseWidgetWindow>

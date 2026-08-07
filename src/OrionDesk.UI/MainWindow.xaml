@@ -1,0 +1,16 @@
+<Window x:Class="OrionDesk.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OrionDesk.UI"
+        mc:Ignorable="d"
+        Title="OrionDesk"
+        Width="0" Height="0"
+        WindowStyle="None"
+        ShowInTaskbar="False"
+        Visibility="Hidden"
+        AllowsTransparency="True"
+        Background="Transparent">
+    <!-- 主窗口隐藏，只用于托盘图标管理 -->
+</Window>
