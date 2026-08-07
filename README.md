@@ -13,6 +13,7 @@
 | **启动器** | 拖拽添加应用、图标/列表两种视图、桌面图标智能隐藏 |
 | **便签** | 多颜色便签、防抖自动保存 |
 | **文件夹映射** | 树形目录结构、懒加载子目录、双击打开文件 |
+| **Git 同步监控** | 自动扫描 git 仓库、显示同步状态（已同步/待推/待拉/分歧）、点击打开目录 |
 
 ### 天气系统
 
@@ -41,14 +42,22 @@
 - 统一的配色系统和控件样式
 - 鼠标悬停透明度过渡动画
 
+### 诊断监控
+
+- 进程级指标实时监控（内存/GDI/USER/线程/句柄/GC）
+- CSV 日志文件记录（按日分文件，位于 `logs/diagnostics_*.csv`）
+- 诊断窗口（实时快照 + 历史趋势、异常高亮）
+- 托盘右键 → 诊断 打开
+
 ## 技术栈
 
 | 技术 | 用途 |
 |------|------|
 | .NET 10 | 运行时框架 |
 | WPF | UI 框架 |
-| Win32 API | 桌面层级控制（WorkerW） |
+| Win32 API | 桌面层级控制（WorkerW）、GDI/USER 句柄监控 |
 | 和风天气 QWeather | 天气数据 |
+| git CLI | Git 仓库同步状态检查 |
 | JSON | 配置存储（原子写入 + 备份） |
 
 ## 项目结构
@@ -64,6 +73,8 @@ OrionDesk/
 │   │   │   ├── LauncherWidget.xaml  # 启动器组件
 │   │   │   ├── StickyNoteWidget.xaml# 便签组件
 │   │   │   ├── FolderWidget.xaml    # 文件夹映射组件
+│   │   │   ├── GitSyncWidget.xaml   # Git 同步监控组件
+│   │   │   ├── DiagnosticsWindow.xaml # 诊断监控窗口
 │   │   │   ├── SettingsWindow.xaml  # 设置页面
 │   │   │   └── WeatherDetailWindow.xaml # 天气详情弹窗
 │   │   ├── App.xaml                 # 全局样式和配色
@@ -71,13 +82,14 @@ OrionDesk/
 │   │
 │   ├── OrionDesk.BLL/              # 业务逻辑层
 │   │   ├── Models/                  # 数据模型
-│   │   └── Services/                # 业务服务（天气/监控/农历/组件管理）
+│   │   └── Services/                # 业务服务（天气/监控/农历/Git同步/诊断/组件管理）
 │   │
 │   └── OrionDesk.DAL/              # 数据访问层
 │       ├── ConfigRepository.cs      # JSON 配置读写
 │       └── DataPath.cs              # 路径管理
 │
-└── publish/                         # 便携版发布（自包含单文件）
+├── publish/                         # 便携版发布（自包含单文件）
+└── .skills/                         # 项目状态管理
 ```
 
 ## 使用方法
@@ -96,13 +108,18 @@ OrionDesk/
 | 切换样式 | 右键组件 → 菜单选项 |
 | 锁定组件 | 右键 → 锁定，或点击右上角锁图标 |
 | 天气详情 | 右键时钟 → 天气详情 |
+| 诊断监控 | 右键托盘图标 → 诊断 |
 | 添加/删除组件 | 右键托盘图标 → 添加组件 |
 | 隐藏全部 | 右键托盘图标 → 隐藏所有组件 / 双击托盘图标 |
 
-## 配置文件
+## 数据目录
 
-配置保存在: `%LocalAppData%\OrionDesk\config.json`
+| 文件 | 位置 |
+|------|------|
+| 配置文件 | `%LocalAppData%\OrionDesk\config.json` |
+| 诊断日志 | `%LocalAppData%\OrionDesk\logs\diagnostics_*.csv` |
+| 启动日志 | `%LocalAppData%\OrionDesk\startup.log` |
 
 ## 许可证
 
-ISC License — Copyright (c) 2025 星月拾貳
+ISC License — Copyright (c) 2026 星月拾貳

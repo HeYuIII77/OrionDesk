@@ -366,9 +366,9 @@ namespace OrionDesk.UI.Windows
                 if (_listPanel == null)
                 {
                     _listPanel = new StackPanel();
-                    // 替换 ScrollViewer 的内容
-                    ContentScroller.Content = _listPanel;
                 }
+                // 每次切换都要重新设置 Content（上次可能被切回 IconPanel）
+                ContentScroller.Content = _listPanel;
 
                 foreach (var item in _items)
                 {

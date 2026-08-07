@@ -118,3 +118,17 @@
 **Reproduction**: 运行时报 "无法找到名为 BoolToVis 的资源"
 **Impact**: FolderWidget 无法启动
 **Resolution**: BooleanToVisibilityConverter 从 FolderWidget.xaml 移到 App.xaml（ControlTemplate 内引用需要全局资源）
+
+## Bug: LauncherWidget 图标切列表后内容消失
+
+**Status**: Resolved — 每次切列表都重新设置 ContentScroller.Content
+**Reproduction**: 图标模式→切列表→切回图标→再切列表，列表内容为空
+**Impact**: 第二次及之后从图标切到列表模式不显示任何内容
+**Resolution**: RefreshView 中 `_listPanel` 非 null 时跳过了 `ContentScroller.Content = _listPanel` 赋值，但此时 Content 已被切回 IconPanel。修复为每次切到列表模式都重新赋值
+
+## Bug: FolderWidget 启动后根节点展开但无子内容
+
+**Status**: Resolved — 先 Add 到树再设置 IsExpanded
+**Reproduction**: 启动 OrionDesk，文件夹映射组件根节点已展开但子目录不显示，需手动关闭再展开
+**Impact**: 启动时无法看到根目录下的文件和文件夹
+**Resolution**: IsExpanded=true 在 FolderTree.Items.Add() 之前设置，节点不在视觉树中导致懒加载不生效。调换顺序：先 Add 再 IsExpanded

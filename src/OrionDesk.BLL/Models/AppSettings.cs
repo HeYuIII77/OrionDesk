@@ -22,6 +22,11 @@ namespace OrionDesk.BLL.Models
         }
 
         /// <summary>
+        /// Git 同步监控刷新频率（分钟），默认 10 分钟
+        /// </summary>
+        public int GitSyncRefreshMinutes { get; set; } = 10;
+
+        /// <summary>
         /// 是否开机启动
         /// </summary>
         public bool StartWithWindows { get; set; } = false;

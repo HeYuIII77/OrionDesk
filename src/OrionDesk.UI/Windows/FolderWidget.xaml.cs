@@ -75,8 +75,9 @@ namespace OrionDesk.UI.Windows
             try
             {
                 var rootNode = CreateDirectoryNode(new DirectoryInfo(_folderPath));
-                rootNode.IsExpanded = true;
                 FolderTree.Items.Add(rootNode);
+                // 先加入树再展开，否则 Expanded 事件触发时节点不在视觉树中，懒加载不生效
+                rootNode.IsExpanded = true;
             }
             catch (Exception ex)
             {

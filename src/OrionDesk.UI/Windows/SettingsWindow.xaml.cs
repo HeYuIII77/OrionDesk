@@ -21,17 +21,24 @@ namespace OrionDesk.UI.Windows
         /// </summary>
         public bool IsSaved { get; private set; }
 
-        public SettingsWindow(WeatherSettings weatherSettings, WeatherService weatherService)
+        /// <summary>
+        /// Git 同步刷新频率（读取用）
+        /// </summary>
+        public int GitSyncRefreshMinutes { get; private set; }
+
+        public SettingsWindow(WeatherSettings weatherSettings, WeatherService weatherService, int gitSyncRefreshMinutes = 10)
         {
             InitializeComponent();
 
             _weatherSettings = weatherSettings;
             _weatherService = weatherService;
+            GitSyncRefreshMinutes = gitSyncRefreshMinutes;
 
             // 加载当前设置
             ApiKeyBox.Text = _weatherSettings.ApiKey;
             ApiHostBox.Text = _weatherSettings.ApiHost;
             RefreshBox.Text = _weatherSettings.RefreshMinutes.ToString();
+            GitRefreshBox.Text = gitSyncRefreshMinutes.ToString();
 
             // 显示当前城市配置
             UpdateCurrentCityDisplay();
@@ -149,6 +156,10 @@ namespace OrionDesk.UI.Windows
             {
                 _weatherSettings.RefreshMinutes = minutes;
             }
+            if (int.TryParse(GitRefreshBox.Text, out var gitMinutes) && gitMinutes >= 5)
+            {
+                GitSyncRefreshMinutes = gitMinutes;
+            }
             _weatherSettings.ApiKey = ApiKeyBox.Text.Trim();
             _weatherSettings.ApiHost = ApiHostBox.Text.Trim();
             IsSaved = true;
@@ -161,9 +172,16 @@ namespace OrionDesk.UI.Windows
         {
             if (!int.TryParse(RefreshBox.Text, out var minutes) || minutes < 10)
             {
-                System.Windows.MessageBox.Show("刷新频率不能小于 10 分钟", "提示",
+                System.Windows.MessageBox.Show("天气刷新频率不能小于 10 分钟", "提示",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 RefreshBox.Focus();
+                return;
+            }
+            if (!int.TryParse(GitRefreshBox.Text, out var gitMinutes) || gitMinutes < 5)
+            {
+                System.Windows.MessageBox.Show("Git 刷新频率不能小于 5 分钟", "提示",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GitRefreshBox.Focus();
                 return;
             }
 

@@ -1,0 +1,79 @@
+<local:BaseWidgetWindow x:Class="OrionDesk.UI.Windows.GitSyncWidget"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:OrionDesk.UI.Windows"
+        Title="Git 同步监控"
+        Background="Transparent"
+        AllowDrop="True"
+        Drop="OnDrop"
+        DragOver="OnDragOver">
+    <Window.Resources>
+        <!-- 仓库名称样式 -->
+        <Style x:Key="RepoNameStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+        </Style>
+
+        <!-- 状态标签样式 -->
+        <Style x:Key="StatusStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <!-- 提交信息样式 -->
+        <Style x:Key="CommitStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#88FFFFFF"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Style="{StaticResource GlassBackground}">
+        <Border.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="刷新" Click="Refresh_Click"/>
+                <MenuItem x:Name="SetScanPathMenuItem" Header="设置扫描路径" Click="SetScanPath_Click"/>
+                <Separator/>
+                <MenuItem x:Name="LockMenuItem" Header="锁定" Click="Lock_Click"/>
+                <Separator/>
+                <MenuItem Header="关闭组件" Click="Close_Click"/>
+            </ContextMenu>
+        </Border.ContextMenu>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 标题栏 -->
+            <Grid Grid.Row="0" Margin="0,0,0,6">
+                <Button x:Name="LockButton" Content="🔓"
+                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Style="{StaticResource LockButtonStyle}"
+                        Click="Lock_Click" ToolTip="锁定"/>
+                <TextBlock x:Name="HeaderText"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="#88FFFFFF" FontSize="11" FontFamily="Segoe UI"
+                           Text="Git 同步监控"/>
+                <Button x:Name="RefreshButton" Content="🔄"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Style="{StaticResource LockButtonStyle}"
+                        Click="Refresh_Click" ToolTip="刷新" FontSize="12"/>
+            </Grid>
+
+            <!-- 仓库列表 -->
+            <ScrollViewer Grid.Row="1" Style="{StaticResource DarkScrollViewerStyle}"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="RepoPanel">
+                    <!-- 动态添加仓库状态项 -->
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</local:BaseWidgetWindow>

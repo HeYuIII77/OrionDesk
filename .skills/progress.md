@@ -213,3 +213,78 @@
 
 ### Modified
 - OrionDesk.UI.csproj - 添加 PublishSingleFile、SelfContained、RuntimeIdentifier、EnableCompressionInSingleFile 等发布属性
+
+### Git 同步监控组件
+
+### Completed
+- Git 同步监控组件（自动扫描指定目录下所有 git 仓库，显示与远程的同步状态）
+- GitSyncService（git CLI 调用、仓库发现、状态解析、批量检查）
+- 智能扫描：扫描目录下所有子目录，标记是否为 git 仓库
+- 非 git 目录灰色显示（"无仓库"标识），排在最后
+- 状态显示：✅已同步 / ⬆N待推 / ⬇N待拉 / ⚠分歧 / 🔗无远程 / ❌错误
+- 按状态排序：异常 > 分歧 > 待拉 > 待推 > 已同步 > 无远程
+- 点击仓库名/目录名用资源管理器打开对应文件夹
+- 拖入文件夹：git 仓库→添加到额外列表，非 git 目录→设为扫描路径
+- UTF-8 编码修复（LANG=en_US.UTF-8 + StandardOutputEncoding，解决中文乱码）
+- GIT_TERMINAL_PROMPT=0 防止弹出认证提示
+- GitSyncWidget（定时刷新、状态排序、右键刷新/设置扫描路径）
+- AppSettings 添加 GitSyncRefreshMinutes 全局属性
+- SettingsWindow 添加 Git 同步刷新频率配置
+- 防呆：非 git 目录跳过、空仓库、无权限、git 未安装、网络超时
+
+### Added
+- GitSyncSettings - 设置模型（ScanPath、ExtraRepos、RefreshMinutes）
+- GitSyncService - git 命令调用服务（DiscoverDirs/CheckRepoAsync/CheckAllAsync）
+- GitRepoStatus - 仓库状态信息（Branch/Status/Ahead/Behind/LastCommit 等）
+- DiscoveredDir - 扫描目录信息（Name/Path/IsGitRepo）
+- GitSyncStatus - 同步状态枚举（Synced/Ahead/Behind/Diverged/NoRemote/Error）
+- GitSyncWidget - Git 同步监控组件
+
+### Modified
+- AppSettings.cs - 添加 GitSyncRefreshMinutes 属性
+- SettingsWindow.xaml - 添加 Git 同步刷新频率输入框
+- SettingsWindow.xaml.cs - 构造函数接收 gitSyncRefreshMinutes、ApplySettings/SaveButton_Click 扩展
+- MainWindow.xaml.cs - 托盘菜单添加"Git 同步监控"、AddWidget/CreateWidgetWindow 注册、OpenSettings 传递 git 刷新频率
+- OrionDesk.UI.csproj - 添加 DAL 项目引用
+
+### Bug 修复
+
+### Resolved
+- LauncherWidget 图标/列表切换 bug：第二次从图标切列表时内容不显示
+  - 原因：`_listPanel` 非 null 时跳过 `ContentScroller.Content = _listPanel` 赋值
+  - 修复：每次切到列表模式都重新设置 `ContentScroller.Content = _listPanel`
+- FolderWidget 根节点展开无内容：启动后根节点已展开但子目录不显示
+  - 原因：`IsExpanded = true` 在 `FolderTree.Items.Add()` 之前设置，节点不在视觉树中懒加载不生效
+  - 修复：先 Add 到树，再设置 IsExpanded = true
+
+### Modified
+- LauncherWidget.xaml.cs - RefreshView 方法修复 Content 赋值逻辑
+- FolderWidget.xaml.cs - LoadTree 方法调换 Add 和 IsExpanded 顺序
+
+### 文档更新
+
+### Completed
+- README.md 全面重写（功能特性、技术栈、项目结构、使用方法、快捷操作、许可证）
+- LICENSE 文件（ISC 许可证，中英双语，版权归属星月拾貳）
+
+### 长时间运行稳定性监控
+
+### Completed
+- DiagnosticsService 诊断服务（进程级指标采集：内存/GDI/USER/线程/句柄/GC）
+- Win32 API GetGuiResources 采集 GDI 和 USER 对象数
+- System.Timers.Timer 定时采集（默认 5 分钟间隔）
+- CSV 日志文件记录（按日分文件，位于 logs/diagnostics_yyyy-MM-dd.csv）
+- DiagnosticsWindow 诊断窗口（实时快照面板 + 历史趋势列表）
+- 当前快照：工作集/私有内存/托管堆/GDI/USER/内核句柄/线程/GC 代次
+- 趋势历史：交替行背景、GDI>500/USER>300 红色高亮警告
+- 操作按钮：手动采集、打开日志目录
+- MainWindow 托盘菜单添加"诊断"入口
+- MainWindow 启动时自动启动诊断服务，退出时释放
+
+### Added
+- DiagnosticsService - 诊断服务（BLL 层，System.Timers.Timer + CSV 写入）
+- DiagnosticsSnapshot - 诊断快照数据类
+- DiagnosticsWindow - 诊断监控窗口（UI 层）
+
+### Modified
+- MainWindow.xaml.cs - 添加 _diagnosticsService 字段、托盘菜单"诊断"入口、OpenDiagnostics 方法、LoadAndRestore 中启动诊断服务、OnClosed 中释放

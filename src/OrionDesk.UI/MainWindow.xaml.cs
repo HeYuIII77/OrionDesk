@@ -24,7 +24,9 @@ namespace OrionDesk.UI
         private ToolStripMenuItem? _startupItem;
         private readonly WidgetManager _widgetManager;
         private readonly WeatherService _weatherService;
+        private readonly DiagnosticsService _diagnosticsService;
         private readonly List<BaseWidgetWindow> _activeWidgets = new List<BaseWidgetWindow>();
+        private DiagnosticsWindow? _diagnosticsWindow;
         private bool _isExiting = false;
         private bool _isClosingAll = false;
 
@@ -34,6 +36,7 @@ namespace OrionDesk.UI
 
             _widgetManager = new WidgetManager();
             _weatherService = new WeatherService();
+            _diagnosticsService = new DiagnosticsService(intervalMinutes: 5);
 
             // 初始化托盘图标
             InitializeTrayIcon();
@@ -110,6 +113,10 @@ namespace OrionDesk.UI
                     // 恢复完成后统一保存一次（确保配置完整）
                     _widgetManager.Save();
                 }
+
+                // 启动诊断服务（组件恢复完成后）
+                _diagnosticsService.Start();
+                Log("[启动] 诊断服务已启动");
             }
             catch (Exception ex)
             {
@@ -140,6 +147,7 @@ namespace OrionDesk.UI
             addMenu.DropDownItems.Add("启动器", null, (s, e) => AddWidget("launcher"));
             addMenu.DropDownItems.Add("便签", null, (s, e) => AddWidget("note"));
             addMenu.DropDownItems.Add("文件夹映射", null, (s, e) => AddWidget("folder"));
+            addMenu.DropDownItems.Add("Git 同步监控", null, (s, e) => AddWidget("gitsync"));
             contextMenu.Items.Add(addMenu);
 
             contextMenu.Items.Add(new ToolStripSeparator());
@@ -152,6 +160,9 @@ namespace OrionDesk.UI
 
             // 设置
             contextMenu.Items.Add("设置", null, (s, e) => OpenSettings());
+
+            // 诊断
+            contextMenu.Items.Add("诊断", null, (s, e) => OpenDiagnostics());
 
             contextMenu.Items.Add(new ToolStripSeparator());
 
@@ -223,6 +234,7 @@ namespace OrionDesk.UI
                 "launcher" => (300, 120),
                 "note" => (250, 200),
                 "folder" => (380, 350),
+                "gitsync" => (280, 300),
                 _ => (200, 100)
             };
 
@@ -250,6 +262,7 @@ namespace OrionDesk.UI
                 "launcher" => new LauncherWidget(config, _widgetManager),
                 "note" => new StickyNoteWidget(config, _widgetManager),
                 "folder" => new FolderWidget(config, _widgetManager),
+                "gitsync" => new GitSyncWidget(config, _widgetManager),
                 _ => null
             };
 
@@ -325,17 +338,38 @@ namespace OrionDesk.UI
         }
 
         /// <summary>
+        /// 打开诊断窗口
+        /// </summary>
+        private void OpenDiagnostics()
+        {
+            if (_diagnosticsWindow == null)
+            {
+                _diagnosticsWindow = new DiagnosticsWindow(_diagnosticsService);
+                _diagnosticsWindow.Closed += (s, e) => _diagnosticsWindow = null;
+                _diagnosticsWindow.Show();
+            }
+            else
+            {
+                _diagnosticsWindow.Activate();
+            }
+        }
+
+        /// <summary>
         /// 打开设置窗口
         /// </summary>
         private void OpenSettings()
         {
-            var settingsWindow = new SettingsWindow(_widgetManager.Settings.Weather, _weatherService);
+            var settingsWindow = new SettingsWindow(
+                _widgetManager.Settings.Weather,
+                _weatherService,
+                _widgetManager.Settings.GitSyncRefreshMinutes);
             settingsWindow.Owner = null;
             settingsWindow.ShowDialog();
 
             // 保存配置
             try
             {
+                _widgetManager.Settings.GitSyncRefreshMinutes = settingsWindow.GitSyncRefreshMinutes;
                 _widgetManager.Save();
                 // 清除天气缓存，立刻刷新所有时钟组件的天气
                 _weatherService.ClearCache();
@@ -402,6 +436,7 @@ namespace OrionDesk.UI
 
         protected override void OnClosed(EventArgs e)
         {
+            _diagnosticsService?.Dispose();
             _weatherService?.Dispose();
             _trayIcon?.Dispose();
             base.OnClosed(e);

@@ -215,3 +215,35 @@
 **Impact**: dotnet publish 生成 72MB 单文件 exe，包含 .NET 10 运行时 + WPF 框架
 
 **Status**: Active
+
+### Decision: Git 同步监控使用 Shell 调用 git CLI
+
+**Reason**: 用户已安装 git（使用 Gitee 必备），零依赖，行为可预测；LibGit2Sharp 对 .NET 10 兼容不确定且增加 70MB+ 包体积
+
+**Impact**: 通过 Process.Start 调用 git 命令，需要 git 在 PATH 中
+
+**Status**: Active
+
+### Decision: Git 仓库自动扫描模式
+
+**Reason**: 用户 D:\Project\C# 下有多个 git 项目，手动添加太麻烦
+
+**Impact**: 扫描指定目录下所有子目录，自动发现含 .git 的仓库；非 git 目录也显示但标记为"无仓库"
+
+**Status**: Active
+
+### Decision: Git 刷新频率设为全局配置
+
+**Reason**: 用户要求在设置页面统一配置，而非每个组件单独设置
+
+**Impact**: AppSettings 添加 GitSyncRefreshMinutes，SettingsWindow 添加对应输入框，GitSyncWidget 从全局设置读取
+
+**Status**: Active
+
+### Decision: ISC 许可证
+
+**Reason**: 用户指定 ISC 许可证，版权归属"星月拾貳"，中英双语
+
+**Impact**: README.md 更新许可证信息，新建 LICENSE 文件
+
+**Status**: Active

@@ -107,6 +107,11 @@
                     <TextBox x:Name="RefreshBox" Style="{StaticResource InputStyle}"
                              Width="100" HorizontalAlignment="Left"/>
                     <TextBlock Text="默认 30 分钟，最小 10 分钟"
+                               Style="{StaticResource MutedTextStyle}" Margin="0,4,0,12"/>
+                    <TextBlock Text="Git 同步刷新频率（分钟）" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+                    <TextBox x:Name="GitRefreshBox" Style="{StaticResource InputStyle}"
+                             Width="100" HorizontalAlignment="Left"/>
+                    <TextBlock Text="默认 10 分钟，最小 5 分钟"
                                Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
                 </StackPanel>
             </ScrollViewer>
