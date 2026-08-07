@@ -105,4 +105,4 @@ OrionDesk/
 
 ## 许可证
 
-MIT License
+ISC License — Copyright (c) 2025 星月拾貳
