@@ -1,0 +1,59 @@
+<Window x:Class="OrionDesk.UI.Windows.CmdLauncherSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="CMD 启动器设置"
+        Width="400" Height="380"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#FF1E1E21"
+        Foreground="White"
+        FontFamily="Segoe UI">
+    <Window.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CCFFFFFF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#FF1E1E21" Padding="20">
+        <ScrollViewer Style="{StaticResource DarkScrollViewerStyle}"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <!-- 标题 -->
+                <TextBlock Text="CMD 启动器设置" FontSize="16" FontWeight="SemiBold"
+                           Foreground="White" Margin="0,0,0,16"/>
+
+                <!-- 显示名称 -->
+                <TextBlock Text="显示名称" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="NameBox" Style="{StaticResource InputStyle}" Margin="0,0,0,14"
+                         VerticalContentAlignment="Center"/>
+
+                <!-- 图标 -->
+                <TextBlock Text="图标（emoji，如 🖥 💻 🤖 ⚡ 🔧）" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="IconBox" Style="{StaticResource InputStyle}" Margin="0,0,0,14"
+                         Width="60" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
+
+                <!-- 启动命令 -->
+                <TextBlock Text="启动命令" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="CommandBox" Style="{StaticResource InputStyle}" Margin="0,0,0,14"
+                         VerticalContentAlignment="Center"/>
+
+                <!-- 起始目录 -->
+                <TextBlock Text="起始目录" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="WorkDirBox" Style="{StaticResource InputStyle}" Margin="0,0,0,4"
+                         VerticalContentAlignment="Center"/>
+                <TextBlock Text="留空则使用默认目录（C:\WINDOWS\system32）"
+                           Foreground="#55FFFFFF" FontSize="10" Margin="0,0,0,0"/>
+
+                <!-- 按钮 -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="确定" Style="{StaticResource ButtonStyle}"
+                            Click="OkButton_Click" Margin="0,0,8,0"/>
+                    <Button Content="取消" Style="{StaticResource SecondaryButtonStyle}"
+                            Click="CancelButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</Window>

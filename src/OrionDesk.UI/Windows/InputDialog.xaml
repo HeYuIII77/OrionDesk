@@ -1,0 +1,34 @@
+<Window x:Class="OrionDesk.UI.Windows.InputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="输入"
+        Width="400" Height="260"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#FF1E1E21"
+        Foreground="White"
+        FontFamily="Segoe UI">
+    <Border Background="#FF1E1E21" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="TitleText" FontSize="16" FontWeight="SemiBold"
+                       Foreground="White" Margin="0,0,0,12"/>
+            <TextBlock x:Name="PromptText" Grid.Row="1" Foreground="#CCFFFFFF"
+                       FontSize="12" Margin="0,0,0,8"/>
+            <TextBox x:Name="InputBox" Grid.Row="2" Style="{StaticResource InputStyle}"
+                     VerticalContentAlignment="Center" Margin="0,0,0,12"/>
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="确定" Style="{StaticResource ButtonStyle}"
+                        Click="OkButton_Click" Margin="0,0,8,0"/>
+                <Button Content="取消" Style="{StaticResource SecondaryButtonStyle}"
+                        Click="CancelButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -148,6 +148,9 @@ namespace OrionDesk.UI
             addMenu.DropDownItems.Add("便签", null, (s, e) => AddWidget("note"));
             addMenu.DropDownItems.Add("文件夹映射", null, (s, e) => AddWidget("folder"));
             addMenu.DropDownItems.Add("Git 同步监控", null, (s, e) => AddWidget("gitsync"));
+            addMenu.DropDownItems.Add("快捷工具", null, (s, e) => AddWidget("quicktools"));
+            addMenu.DropDownItems.Add("日历事项", null, (s, e) => AddWidget("calendar"));
+            addMenu.DropDownItems.Add("CMD 启动器", null, (s, e) => AddWidget("cmdlauncher"));
             contextMenu.Items.Add(addMenu);
 
             contextMenu.Items.Add(new ToolStripSeparator());
@@ -235,6 +238,9 @@ namespace OrionDesk.UI
                 "note" => (250, 200),
                 "folder" => (380, 350),
                 "gitsync" => (280, 300),
+                "quicktools" => (240, 320),
+                "calendar" => (280, 360),
+                "cmdlauncher" => (160, 160),
                 _ => (200, 100)
             };
 
@@ -263,6 +269,9 @@ namespace OrionDesk.UI
                 "note" => new StickyNoteWidget(config, _widgetManager),
                 "folder" => new FolderWidget(config, _widgetManager),
                 "gitsync" => new GitSyncWidget(config, _widgetManager),
+                "quicktools" => new QuickToolsWidget(config, _widgetManager),
+                "calendar" => new CalendarWidget(config, _widgetManager),
+                "cmdlauncher" => new CmdLauncherWidget(config, _widgetManager),
                 _ => null
             };
 

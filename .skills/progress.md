@@ -288,3 +288,73 @@
 
 ### Modified
 - MainWindow.xaml.cs - 添加 _diagnosticsService 字段、托盘菜单"诊断"入口、OpenDiagnostics 方法、LoadAndRestore 中启动诊断服务、OnClosed 中释放
+
+### 快捷工具组件（第一阶段）
+
+### Completed
+- QuickToolItem 模型（Id/Name/Icon/Path/Arguments/Type/RunAsAdmin/IsPreset/Category）
+- QuickToolType 枚举（App/Folder/Url/Shell）
+- QuickToolsSettings 模型（Items/Columns）
+- QuickToolsWidget 图标网格组件（64×64 按钮、WrapPanel 自动换行、ScrollViewer 滚动）
+- 12 个预置系统工具（CMD/管理员CMD/PowerShell/管理员PS/终端/任务管理器/设备管理器/服务管理/注册表/事件查看器/计算机管理/资源监视器）
+- 4 个预置开发工具（VS Code/Visual Studio/Git Bash/Explorer）
+- 管理员权限启动（Verb="runas" + UAC 取消静默处理）
+- 右键菜单（以管理员身份运行/编辑/删除）
+- QuickToolEditWindow 编辑对话框（名称/图标/类型/路径/参数/管理员权限）
+- 类型切换动态显示/隐藏字段（App:全部/Folder:路径/Url:路径/Shell:命令）
+- 浏览按钮（App:OpenFileDialog/Folder:FolderBrowserDialog）
+- 预置工具不可删除、编辑时类型和路径不可改
+- 配置持久化（Settings["items"] JSON 数组）
+
+### Added
+- QuickToolItem.cs - 快捷工具项模型 + QuickToolType 枚举
+- QuickToolsSettings.cs - 快捷工具组件设置
+- QuickToolsWidget.xaml/.cs - 快捷工具图标网格组件
+- QuickToolEditWindow.xaml/.cs - 添加/编辑快捷工具对话框
+
+### Modified
+- MainWindow.xaml.cs - 托盘菜单添加"快捷工具"、CreateWidgetWindow 注册、默认尺寸
+
+### Git 同步监控扩展 SVN 支持
+
+### Completed
+- VcsType 枚举（None/Git/Svn）
+- DiscoveredDir 支持 VcsType（替代原 IsGitRepo）
+- GitRepoStatus 新增 VcsType 字段
+- SVN 仓库发现（.svn 目录检测）
+- RunSvnAsync（svn CLI 调用，UTF-8 + 超时 + Kill）
+- CheckSvnRepoAsync（svn info + svn status → 状态映射）
+- CheckAllAsync 重载（接受 List<DiscoveredDir>，按 VcsType 分发）
+- StatusText SVN 适配（"本地修改" 替代 "待推"）
+- GitSyncWidget 拖拽支持 .svn 识别
+- GitSyncWidget UI 显示 [Git]/[SVN] 标签
+- 标题栏显示 Git+SVN 数量统计
+- 分支行 SVN 显示仓库路径（🔗 图标）
+
+### Modified
+- GitSyncService.cs - 新增 VcsType 枚举、RunSvnAsync、CheckSvnRepoAsync、CheckAllAsync 重载、DiscoverDirs SVN 识别
+- GitSyncWidget.xaml.cs - 拖拽 .svn 识别、VCS 标签显示、非 VCS 目录标签更新
+
+### 日历事项组件
+
+### Completed
+- CalendarEvent 模型（Title/Start/End/IsAllDay/Type/Repeat/Note）
+- EventType 枚举（Work/Life/Anniversary/Reminder，对应红/绿/蓝/黄）
+- EventRepeat 枚举（None/Daily/Weekly/Monthly/Yearly）
+- IsOnDate 方法（含重复规则展开：每天/每周/每月/每年）
+- CalendarWidget 月视图组件（6×7 日期网格、今日高亮、非当月灰色）
+- 日期格子显示事项颜色圆点（最多 3 个 + +N 提示）
+- 月份切换（◀ ▶）+ 今天按钮
+- 倒计时区域（组件底部，最近 5 个倒计时/正计时）
+- 倒计时格式："还有 X天 HH:MM" / "已持续 X天"
+- EventEditWindow 编辑对话框（标题/日期/全天切换/时间/类型/重复/备注/删除）
+- 配置持久化（WidgetConfig.Settings["events"] JSON 数组）
+- MainWindow 托盘菜单集成
+
+### Added
+- CalendarEvent.cs - 日历事项模型 + EventType + EventRepeat 枚举
+- CalendarWidget.xaml/.cs - 月视图日历组件
+- EventEditWindow.xaml/.cs - 添加/编辑事项对话框
+
+### Modified
+- MainWindow.xaml.cs - 托盘菜单添加"日历事项"、CreateWidgetWindow 注册

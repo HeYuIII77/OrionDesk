@@ -3,12 +3,12 @@ using System.Diagnostics;
 namespace OrionDesk.BLL.Services
 {
     /// <summary>
-    /// Git 同步监控服务
-    /// 通过 git CLI 检查本地仓库与远程仓库的同步状态
+    /// 版本控制同步监控服务
+    /// 通过 git/svn CLI 检查本地仓库与远程仓库的同步状态
     /// </summary>
     public class GitSyncService
     {
-        private const int GitTimeoutMs = 15000; // git 命令超时 15 秒
+        private const int DefaultTimeoutMs = 15000; // 命令超时 15 秒
 
         /// <summary>
         /// 扫描指定目录，返回所有子目录（标记是否为 git 仓库）
@@ -29,13 +29,15 @@ namespace OrionDesk.BLL.Services
                 {
                     try
                     {
-                        var gitDir = Path.Combine(dir, ".git");
-                        var isGit = Directory.Exists(gitDir) || File.Exists(gitDir);
+                        var isGit = Directory.Exists(Path.Combine(dir, ".git"))
+                                 || File.Exists(Path.Combine(dir, ".git"));
+                        var isSvn = Directory.Exists(Path.Combine(dir, ".svn"));
+                        var vcsType = isGit ? VcsType.Git : (isSvn ? VcsType.Svn : VcsType.None);
                         dirs.Add(new DiscoveredDir
                         {
                             Path = dir,
                             Name = Path.GetFileName(dir),
-                            IsGitRepo = isGit
+                            VcsType = vcsType
                         });
                     }
                     catch (UnauthorizedAccessException)
@@ -66,7 +68,7 @@ namespace OrionDesk.BLL.Services
         public List<string> DiscoverRepos(string scanPath)
         {
             return DiscoverDirs(scanPath)
-                .Where(d => d.IsGitRepo)
+                .Where(d => d.VcsType != VcsType.None)
                 .Select(d => d.Path)
                 .ToList();
         }
@@ -206,26 +208,147 @@ namespace OrionDesk.BLL.Services
         }
 
         /// <summary>
-        /// 批量检查多个仓库
+        /// 检查单个 SVN 仓库的工作副本状态
         /// </summary>
-        public async Task<List<GitRepoStatus>> CheckAllAsync(List<string> repoPaths)
+        public async Task<GitRepoStatus> CheckSvnRepoAsync(string repoPath)
+        {
+            var status = new GitRepoStatus
+            {
+                RepoPath = repoPath,
+                RepoName = Path.GetFileName(repoPath),
+                VcsType = VcsType.Svn
+            };
+
+            try
+            {
+                // 检查 svn 是否可用
+                var svnVersion = await RunSvnAsync(repoPath, "--version --quiet");
+                if (svnVersion == null)
+                {
+                    status.Error = "未检测到SVN";
+                    status.Status = GitSyncStatus.Error;
+                    return status;
+                }
+
+                // 获取仓库 URL（SVN 没有分支概念，用 URL 代替）
+                var url = await RunSvnAsync(repoPath, "info --show-item url");
+                if (!string.IsNullOrWhiteSpace(url))
+                {
+                    // 显示 URL 的最后两段路径
+                    var uri = url.Trim().TrimEnd('/');
+                    var segments = uri.Split('/');
+                    status.Branch = segments.Length >= 2
+                        ? string.Join("/", segments[^2..])
+                        : segments[^1];
+                }
+
+                // 获取最新提交信息
+                var lastCommit = await RunSvnAsync(repoPath, "log -l 1 --quiet");
+                if (!string.IsNullOrWhiteSpace(lastCommit))
+                {
+                    // 输出格式: "r1234 | author | 2026-08-07 10:30:00 +0800 (Thu, 07 Aug 2026)"
+                    var lines = lastCommit.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var line in lines)
+                    {
+                        if (line.StartsWith('r') && line.Contains('|'))
+                        {
+                            var parts = line.Split('|', 3, StringSplitOptions.TrimEntries);
+                            if (parts.Length >= 3)
+                            {
+                                status.LastCommitHash = parts[0]; // r1234
+                                status.LastCommitAuthor = parts[1];
+                                if (DateTime.TryParse(parts[2].Split('(')[0].Trim(), out var commitTime))
+                                    status.LastCommitTime = FormatRelativeTime(commitTime);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // 获取本地修改数量
+                var localStatus = await RunSvnAsync(repoPath, "status");
+                var localChanges = 0;
+                if (!string.IsNullOrWhiteSpace(localStatus))
+                {
+                    localChanges = localStatus.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                        .Count(line => line.Length > 0 && "MADC!".Contains(line[0]));
+                }
+
+                // 获取远程最新版本（svn status -u 只显示更新信息）
+                var remoteInfo = await RunSvnAsync(repoPath, "info --show-item revision");
+                var localRev = 0;
+                if (!string.IsNullOrWhiteSpace(remoteInfo) && int.TryParse(remoteInfo.Trim().TrimStart('r'), out var rev))
+                    localRev = rev;
+
+                // 尝试获取远程最新版本（需要网络）
+                var remoteStatus = await RunSvnAsync(repoPath, "status -u -q", timeoutMs: 20000);
+                var remoteRev = localRev;
+                if (!string.IsNullOrWhiteSpace(remoteStatus))
+                {
+                    // 输出中 " * 1234" 行表示远程有更新
+                    foreach (var line in remoteStatus.Split('\n'))
+                    {
+                        if (line.Contains('*'))
+                        {
+                            var match = System.Text.RegularExpressions.Regex.Match(line, @"(\d+)");
+                            if (match.Success && int.TryParse(match.Value, out var rRev))
+                            {
+                                remoteRev = Math.Max(remoteRev, rRev);
+                            }
+                        }
+                    }
+                }
+
+                // 确定状态
+                status.HasRemote = true;
+                status.Ahead = localChanges;
+                status.Behind = Math.Max(0, remoteRev - localRev);
+
+                if (localChanges > 0 && remoteRev > localRev)
+                    status.Status = GitSyncStatus.Diverged;
+                else if (localChanges > 0)
+                    status.Status = GitSyncStatus.Ahead;
+                else if (remoteRev > localRev)
+                    status.Status = GitSyncStatus.Behind;
+                else
+                    status.Status = GitSyncStatus.Synced;
+            }
+            catch (Exception ex)
+            {
+                status.Status = GitSyncStatus.Error;
+                status.Error = ex.Message;
+                Debug.WriteLine($"[GitSync] SVN 检查失败 {repoPath}: {ex.Message}");
+            }
+
+            return status;
+        }
+
+        /// <summary>
+        /// 批量检查多个仓库（自动识别 Git/SVN）
+        /// </summary>
+        public async Task<List<GitRepoStatus>> CheckAllAsync(List<DiscoveredDir> dirs)
         {
             var results = new List<GitRepoStatus>();
 
             // 串行检查，避免并发网络请求过多
-            foreach (var path in repoPaths)
+            foreach (var dir in dirs)
             {
                 try
                 {
-                    var status = await CheckRepoAsync(path);
+                    GitRepoStatus status;
+                    if (dir.VcsType == VcsType.Svn)
+                        status = await CheckSvnRepoAsync(dir.Path);
+                    else
+                        status = await CheckRepoAsync(dir.Path);
                     results.Add(status);
                 }
                 catch (Exception ex)
                 {
                     results.Add(new GitRepoStatus
                     {
-                        RepoPath = path,
-                        RepoName = Path.GetFileName(path),
+                        RepoPath = dir.Path,
+                        RepoName = dir.Name,
+                        VcsType = dir.VcsType,
                         Status = GitSyncStatus.Error,
                         Error = ex.Message
                     });
@@ -233,6 +356,20 @@ namespace OrionDesk.BLL.Services
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// 批量检查多个仓库（兼容旧调用，自动识别 VCS 类型）
+        /// </summary>
+        public async Task<List<GitRepoStatus>> CheckAllAsync(List<string> repoPaths)
+        {
+            var dirs = repoPaths.Select(p => new DiscoveredDir
+            {
+                Path = p,
+                Name = System.IO.Path.GetFileName(p),
+                VcsType = Directory.Exists(System.IO.Path.Combine(p, ".svn")) ? VcsType.Svn : VcsType.Git
+            }).ToList();
+            return await CheckAllAsync(dirs);
         }
 
         #region 辅助方法
@@ -247,9 +384,55 @@ namespace OrionDesk.BLL.Services
         }
 
         /// <summary>
+        /// 执行 svn 命令并返回标准输出（强制 UTF-8 编码）
+        /// </summary>
+        private static async Task<string?> RunSvnAsync(string workingDir, string arguments, int timeoutMs = DefaultTimeoutMs)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "svn",
+                    Arguments = arguments,
+                    WorkingDirectory = workingDir,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8,
+                    StandardErrorEncoding = System.Text.Encoding.UTF8,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+                if (process == null) return null;
+
+                using var cts = new CancellationTokenSource(timeoutMs);
+                var outputTask = process.StandardOutput.ReadToEndAsync(cts.Token);
+
+                var waitTask = process.WaitForExitAsync(cts.Token);
+                try
+                {
+                    await waitTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    try { process.Kill(true); } catch { }
+                    return null;
+                }
+
+                return await outputTask;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[GitSync] svn 命令执行失败: {arguments} - {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 执行 git 命令并返回标准输出（强制 UTF-8 编码）
         /// </summary>
-        private static async Task<string?> RunGitAsync(string workingDir, string arguments, int timeoutMs = GitTimeoutMs)
+        private static async Task<string?> RunGitAsync(string workingDir, string arguments, int timeoutMs = DefaultTimeoutMs)
         {
             try
             {
@@ -320,6 +503,19 @@ namespace OrionDesk.BLL.Services
     }
 
     /// <summary>
+    /// 版本控制系统类型
+    /// </summary>
+    public enum VcsType
+    {
+        /// <summary>无版本控制</summary>
+        None,
+        /// <summary>Git</summary>
+        Git,
+        /// <summary>SVN (Subversion)</summary>
+        Svn
+    }
+
+    /// <summary>
     /// 仓库同步状态
     /// </summary>
     public enum GitSyncStatus
@@ -347,7 +543,9 @@ namespace OrionDesk.BLL.Services
         public string RepoName { get; set; } = "";
         /// <summary>仓库完整路径</summary>
         public string RepoPath { get; set; } = "";
-        /// <summary>当前分支名</summary>
+        /// <summary>VCS 类型</summary>
+        public VcsType VcsType { get; set; } = VcsType.Git;
+        /// <summary>当前分支名（Git）或仓库路径（SVN）</summary>
         public string Branch { get; set; } = "";
         /// <summary>同步状态</summary>
         public GitSyncStatus Status { get; set; }
@@ -371,14 +569,16 @@ namespace OrionDesk.BLL.Services
         /// <summary>
         /// 状态的显示文字
         /// </summary>
-        public string StatusText => Status switch
+        public string StatusText => (Status, VcsType) switch
         {
-            GitSyncStatus.Synced => "✅ 已同步",
-            GitSyncStatus.Ahead => $"⬆ {Ahead} 待推",
-            GitSyncStatus.Behind => $"⬇ {Behind} 待拉",
-            GitSyncStatus.Diverged => $"⚠ 分歧 ({Ahead}推/{Behind}拉)",
-            GitSyncStatus.NoRemote => "🔗 无远程",
-            GitSyncStatus.Error => $"❌ {Error}",
+            (GitSyncStatus.Synced, _) => "✅ 已同步",
+            (GitSyncStatus.Ahead, VcsType.Svn) => $"⬆ {Ahead} 本地修改",
+            (GitSyncStatus.Ahead, _) => $"⬆ {Ahead} 待推",
+            (GitSyncStatus.Behind, _) => $"⬇ {Behind} 待拉",
+            (GitSyncStatus.Diverged, VcsType.Svn) => $"⚠ 有修改+有更新",
+            (GitSyncStatus.Diverged, _) => $"⚠ 分歧 ({Ahead}推/{Behind}拉)",
+            (GitSyncStatus.NoRemote, _) => "🔗 无远程",
+            (GitSyncStatus.Error, _) => $"❌ {Error}",
             _ => "❓ 未知"
         };
     }
@@ -392,7 +592,7 @@ namespace OrionDesk.BLL.Services
         public string Name { get; set; } = "";
         /// <summary>目录完整路径</summary>
         public string Path { get; set; } = "";
-        /// <summary>是否是 git 仓库（包含 .git 目录或文件）</summary>
-        public bool IsGitRepo { get; set; }
+        /// <summary>VCS 类型</summary>
+        public VcsType VcsType { get; set; }
     }
 }

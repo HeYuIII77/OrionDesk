@@ -114,16 +114,21 @@ namespace OrionDesk.UI.Windows
                     discoveredDirs = _gitService.DiscoverDirs(_settings.ScanPath);
                 }
 
-                // 收集 git 仓库路径（扫描到的 + 额外添加的）
-                var gitRepos = discoveredDirs.Where(d => d.IsGitRepo).Select(d => d.Path).ToList();
+                // 收集 VCS 仓库（扫描到的 + 额外添加的）
+                var vcsDirs = discoveredDirs.Where(d => d.VcsType != VcsType.None).ToList();
+                var vcsPaths = vcsDirs.Select(d => d.Path).ToList();
                 foreach (var extra in _settings.ExtraRepos)
                 {
-                    if (!gitRepos.Contains(extra, StringComparer.OrdinalIgnoreCase))
-                        gitRepos.Add(extra);
+                    if (!vcsPaths.Contains(extra, StringComparer.OrdinalIgnoreCase))
+                    {
+                        // 额外仓库也识别 VCS 类型
+                        var isSvn = Directory.Exists(Path.Combine(extra, ".svn"));
+                        vcsDirs.Add(new DiscoveredDir { Path = extra, Name = Path.GetFileName(extra), VcsType = isSvn ? VcsType.Svn : VcsType.Git });
+                    }
                 }
 
-                // 非 git 目录
-                var nonGitDirs = discoveredDirs.Where(d => !d.IsGitRepo).ToList();
+                // 非 VCS 目录
+                var nonVcsDirs = discoveredDirs.Where(d => d.VcsType == VcsType.None).ToList();
 
                 // 更新标题
                 if (string.IsNullOrWhiteSpace(_settings.ScanPath))
@@ -133,21 +138,26 @@ namespace OrionDesk.UI.Windows
                 else
                 {
                     var scanName = Path.GetFileName(_settings.ScanPath.TrimEnd('\\', '/'));
-                    HeaderText.Text = $"📂 {scanName} ({gitRepos.Count}个仓库)";
+                    var gitCount = vcsDirs.Count(d => d.VcsType == VcsType.Git);
+                    var svnCount = vcsDirs.Count(d => d.VcsType == VcsType.Svn);
+                    var countText = svnCount > 0
+                        ? $"{gitCount}Git + {svnCount}SVN"
+                        : $"{vcsPaths.Count}个仓库";
+                    HeaderText.Text = $"📂 {scanName} ({countText})";
                     HeaderText.ToolTip = _settings.ScanPath;
                 }
 
-                if (gitRepos.Count == 0 && nonGitDirs.Count == 0)
+                if (vcsPaths.Count == 0 && nonVcsDirs.Count == 0)
                 {
                     RepoPanel.Children.Clear();
                     AddMessageRow("未发现目录", "请拖入包含项目的文件夹");
                     return;
                 }
 
-                // 批量检查 git 仓库状态
-                var statuses = await Task.Run(() => _gitService.CheckAllAsync(gitRepos));
+                // 批量检查仓库状态（自动识别 Git/SVN）
+                var statuses = await Task.Run(() => _gitService.CheckAllAsync(vcsDirs));
                 _repoStatuses = statuses;
-                _nonGitDirs = nonGitDirs;
+                _nonGitDirs = nonVcsDirs;
 
                 // 更新 UI
                 RefreshView();
@@ -215,7 +225,7 @@ namespace OrionDesk.UI.Windows
 
                 var header = new TextBlock
                 {
-                    Text = $"非 Git 目录 ({_nonGitDirs.Count})",
+                    Text = $"非 VCS 目录 ({_nonGitDirs.Count})",
                     Foreground = new Media.SolidColorBrush(Media.Color.FromRgb(0x66, 0x66, 0x66)),
                     FontSize = 10,
                     Margin = new Thickness(0, 0, 0, 4)
@@ -241,9 +251,10 @@ namespace OrionDesk.UI.Windows
             headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
+            var vcsTag = repo.VcsType == VcsType.Svn ? "[SVN] " : "[Git] ";
             var nameText = new TextBlock
             {
-                Text = $"📂 {repo.RepoName}",
+                Text = $"📂 {vcsTag}{repo.RepoName}",
                 Style = (Style)FindResource("RepoNameStyle"),
                 Cursor = System.Windows.Input.Cursors.Hand,
                 ToolTip = $"点击打开 {repo.RepoPath}"
@@ -276,12 +287,13 @@ namespace OrionDesk.UI.Windows
 
             panel.Children.Add(headerRow);
 
-            // 第二行：分支名
+            // 第二行：分支名（Git）或仓库路径（SVN）
             if (!string.IsNullOrEmpty(repo.Branch))
             {
+                var branchIcon = repo.VcsType == VcsType.Svn ? "🔗" : "🌿";
                 var branchText = new TextBlock
                 {
-                    Text = $"🌿 {repo.Branch}",
+                    Text = $"{branchIcon} {repo.Branch}",
                     Foreground = new Media.SolidColorBrush(Media.Color.FromRgb(0xAA, 0xCC, 0xFF)),
                     FontSize = 11,
                     Margin = new Thickness(0, 2, 0, 0)
@@ -331,7 +343,7 @@ namespace OrionDesk.UI.Windows
         }
 
         /// <summary>
-        /// 添加非 git 目录行（灰色标识）
+        /// 添加非 VCS 目录行（灰色标识）
         /// </summary>
         private void AddNonGitRow(DiscoveredDir dir)
         {
@@ -439,10 +451,13 @@ namespace OrionDesk.UI.Windows
 
                     if (Directory.Exists(path))
                     {
-                        // 检查是否包含 .git
-                        if (Directory.Exists(Path.Combine(path, ".git")))
+                        // 检查是否是 VCS 仓库（.git 或 .svn）
+                        var isGit = Directory.Exists(Path.Combine(path, ".git"));
+                        var isSvn = Directory.Exists(Path.Combine(path, ".svn"));
+
+                        if (isGit || isSvn)
                         {
-                            // 本身是 git 仓库，添加到额外列表
+                            // 本身是仓库，添加到额外列表
                             if (!_settings.ExtraRepos.Contains(path, StringComparer.OrdinalIgnoreCase))
                             {
                                 _settings.ExtraRepos.Add(path);
@@ -452,7 +467,7 @@ namespace OrionDesk.UI.Windows
                         }
                         else
                         {
-                            // 是目录但不是 git 仓库，设为扫描路径
+                            // 是目录但不是仓库，设为扫描路径
                             _settings.ScanPath = path;
                             SaveSettings();
                             RefreshAll();

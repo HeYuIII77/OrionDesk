@@ -71,8 +71,8 @@
                                 </Grid>
                             </Border>
 
-                            <!-- 子项 -->
-                            <ItemsPresenter x:Name="ItemsHost" Visibility="Collapsed"/>
+                            <!-- 子项（左缩进区分层级） -->
+                            <ItemsPresenter x:Name="ItemsHost" Visibility="Collapsed" Margin="16,0,0,0"/>
                         </StackPanel>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsExpanded" Value="True">

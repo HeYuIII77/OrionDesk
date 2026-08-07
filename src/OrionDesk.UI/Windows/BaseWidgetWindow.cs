@@ -129,6 +129,9 @@ namespace OrionDesk.UI.Windows
         // 防抖定时器
         private DispatcherTimer? _saveTimer;
 
+        // 调整大小吸附防重入
+        private bool _isResizing = false;
+
         #endregion
 
         #region 构造函数
@@ -430,7 +433,79 @@ namespace OrionDesk.UI.Windows
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
+            // 防重入（吸附调整大小会再次触发 SizeChanged）
+            if (_isResizing) return;
+
+            // 调整大小时，右/下边缘自动吸附到其他组件
+            if (ResizeMode == ResizeMode.CanResizeWithGrip && e.PreviousSize.Width != e.NewSize.Width || e.PreviousSize.Height != e.NewSize.Height)
+            {
+                _isResizing = true;
+                try
+                {
+                    var (newWidth, newHeight) = CalculateResizeSnap(e.NewSize.Width, e.NewSize.Height);
+                    if (Math.Abs(newWidth - e.NewSize.Width) > 0.5 || Math.Abs(newHeight - e.NewSize.Height) > 0.5)
+                    {
+                        Width = newWidth;
+                        Height = newHeight;
+                    }
+                }
+                finally
+                {
+                    _isResizing = false;
+                }
+            }
+
             SavePosition();
+        }
+
+        /// <summary>
+        /// 计算调整大小时的吸附值（右/下边缘对齐）
+        /// </summary>
+        private (double Width, double Height) CalculateResizeSnap(double newWidth, double newHeight)
+        {
+            var right = Left + newWidth;
+            var bottom = Top + newHeight;
+            var bestDw = (double)SnapThreshold;
+            var bestDh = (double)SnapThreshold;
+            var snapW = newWidth;
+            var snapH = newHeight;
+
+            foreach (var other in _allWidgets)
+            {
+                if (other == this || !other.IsVisible) continue;
+
+                var oLeft = other.Left;
+                var oTop = other.Top;
+                var oRight = oLeft + other.Width;
+                var oBottom = oTop + other.Height;
+
+                // 右边缘对齐：我的右 → 其他左/右
+                TryResizeSnap(right, oLeft, newWidth, ref snapW, ref bestDw);
+                TryResizeSnap(right, oRight, newWidth, ref snapW, ref bestDw);
+
+                // 下边缘对齐：我的下 → 其他上/下
+                TryResizeSnap(bottom, oTop, newHeight, ref snapH, ref bestDh);
+                TryResizeSnap(bottom, oBottom, newHeight, ref snapH, ref bestDh);
+            }
+
+            // 吸附后不能小于最小尺寸
+            snapW = Math.Max(snapW, MinWidth > 0 ? MinWidth : 50);
+            snapH = Math.Max(snapH, MinHeight > 0 ? MinHeight : 50);
+            return (snapW, snapH);
+        }
+
+        /// <summary>
+        /// 尝试调整大小吸附
+        /// </summary>
+        private static void TryResizeSnap(double myEdge, double otherEdge, double currentSize, ref double snapSize, ref double bestDist)
+        {
+            var dist = Math.Abs(myEdge - otherEdge);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                // 调整宽度/高度使右/下边缘对齐到目标
+                snapSize = currentSize + (otherEdge - myEdge);
+            }
         }
 
         /// <summary>

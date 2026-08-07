@@ -373,6 +373,53 @@
                 </Setter>
             </Style>
 
+            <!-- ========== 暗色下拉框样式 ========== -->
+            <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+                <Setter Property="Background" Value="#FF2D2D30"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="BorderBrush" Value="#FF3F3F46"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="8,5"/>
+                <Setter Property="FontSize" Value="13"/>
+            </Style>
+
+            <!-- DarkComboBox 内部 ListBox 的选项样式 -->
+            <Style x:Key="DarkComboBoxItemStyle" TargetType="ListBoxItem">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Padding" Value="10,6"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="border" Background="{TemplateBinding Background}"
+                                    Padding="{TemplateBinding Padding}" CornerRadius="3">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#22FFFFFF"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#33FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ========== 暗色 DatePicker 样式 ========== -->
+            <Style x:Key="DarkDatePickerStyle" TargetType="DatePicker">
+                <Setter Property="Background" Value="#FF2D2D30"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="BorderBrush" Value="#FF3F3F46"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Padding" Value="8,5"/>
+            </Style>
+
             <!-- ========== 转换器 ========== -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </ResourceDictionary>
