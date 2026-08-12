@@ -21,7 +21,7 @@
             <Color x:Key="WarningColor">#FFFFB900</Color>
 
             <!-- ========== 画刷 ========== -->
-            <SolidColorBrush x:Key="GlassBackgroundBrush" Color="#E61E1E21"/>
+            <SolidColorBrush x:Key="GlassBackgroundBrush" Color="#991E1E21"/>
             <SolidColorBrush x:Key="GlassBorderBrush" Color="#33FFFFFF"/>
             <SolidColorBrush x:Key="PrimaryTextBrush" Color="White"/>
             <SolidColorBrush x:Key="SecondaryTextBrush" Color="#CCFFFFFF"/>
@@ -34,7 +34,7 @@
 
             <!-- ========== 组件背景（统一） ========== -->
             <Style x:Key="GlassBackground" TargetType="Border">
-                <Setter Property="Background" Value="#E61E1E21"/>
+                <Setter Property="Background" Value="#991E1E21"/>
                 <Setter Property="CornerRadius" Value="10"/>
                 <Setter Property="BorderBrush" Value="#33FFFFFF"/>
                 <Setter Property="BorderThickness" Value="1"/>

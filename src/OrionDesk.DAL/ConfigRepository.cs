@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -33,7 +34,7 @@ namespace OrionDesk.DAL
                 data = TryRead<T>(bak);
                 if (data != null)
                 {
-                    try { File.Copy(bak, filePath, overwrite: true); } catch { }
+                    try { File.Copy(bak, filePath, overwrite: true); } catch (Exception ex) { Debug.WriteLine($"[配置] .bak 恢复复制失败: {ex.Message}"); }
                     return data;
                 }
             }
@@ -45,7 +46,7 @@ namespace OrionDesk.DAL
                 data = TryRead<T>(gold);
                 if (data != null)
                 {
-                    try { File.Copy(gold, filePath, overwrite: true); } catch { }
+                    try { File.Copy(gold, filePath, overwrite: true); } catch (Exception ex) { Debug.WriteLine($"[配置] .gold 恢复复制失败: {ex.Message}"); }
                     return data;
                 }
             }
@@ -70,7 +71,7 @@ namespace OrionDesk.DAL
                 if (File.Exists(filePath) && TryRead<T>(filePath) != null)
                 {
                     try { File.Copy(filePath, filePath + ".bak", overwrite: true); }
-                    catch { }
+                    catch (Exception ex) { Debug.WriteLine($"[配置] .bak 备份失败: {ex.Message}"); }
                 }
 
                 // 原子写入：tmp → rename，带重试（防杀毒软件/索引服务占用）
@@ -101,7 +102,7 @@ namespace OrionDesk.DAL
             if (!File.Exists(gold) && File.Exists(filePath))
             {
                 try { File.Copy(filePath, gold); }
-                catch { }
+                catch (Exception ex) { Debug.WriteLine($"[配置] .gold 快照创建失败: {ex.Message}"); }
             }
         }
 

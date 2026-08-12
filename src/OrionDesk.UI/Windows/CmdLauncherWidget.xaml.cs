@@ -130,7 +130,7 @@ namespace OrionDesk.UI.Windows
             LockMenuItem.Header = IsLocked ? "解锁" : "锁定";
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void Close_Click(object sender, RoutedEventArgs e) => RequestClose();
 
         #endregion
     }

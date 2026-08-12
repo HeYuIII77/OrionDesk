@@ -78,6 +78,7 @@ namespace OrionDesk.UI.Windows
 
         // 全局组件注册表（用于吸附对齐）
         private static readonly List<BaseWidgetWindow> _allWidgets = new();
+        private static readonly object _allWidgetsLock = new();
         private const int SnapThreshold = 8; // 吸附距离（像素）
 
         /// <summary>
@@ -85,8 +86,11 @@ namespace OrionDesk.UI.Windows
         /// </summary>
         public static void RegisterWidget(BaseWidgetWindow widget)
         {
-            if (!_allWidgets.Contains(widget))
-                _allWidgets.Add(widget);
+            lock (_allWidgetsLock)
+            {
+                if (!_allWidgets.Contains(widget))
+                    _allWidgets.Add(widget);
+            }
         }
 
         /// <summary>
@@ -94,7 +98,10 @@ namespace OrionDesk.UI.Windows
         /// </summary>
         public static void UnregisterWidget(BaseWidgetWindow widget)
         {
-            _allWidgets.Remove(widget);
+            lock (_allWidgetsLock)
+            {
+                _allWidgets.Remove(widget);
+            }
         }
 
         // 组件配置
@@ -131,6 +138,12 @@ namespace OrionDesk.UI.Windows
 
         // 调整大小吸附防重入
         private bool _isResizing = false;
+
+        // 应用退出标志（MainWindow 关闭前设置，允许组件关闭）
+        internal static bool IsAppClosing { get; set; } = false;
+
+        // 单个组件主动关闭标志
+        private bool _requestingClose = false;
 
         #endregion
 
@@ -375,7 +388,9 @@ namespace OrionDesk.UI.Windows
             var myCenterX = left + Width / 2;
             var myCenterY = top + Height / 2;
 
-            foreach (var other in _allWidgets)
+            BaseWidgetWindow[] snapshot;
+            lock (_allWidgetsLock) { snapshot = _allWidgets.ToArray(); }
+            foreach (var other in snapshot)
             {
                 if (other == this || !other.IsVisible) continue;
 
@@ -470,7 +485,9 @@ namespace OrionDesk.UI.Windows
             var snapW = newWidth;
             var snapH = newHeight;
 
-            foreach (var other in _allWidgets)
+            BaseWidgetWindow[] snapshot2;
+            lock (_allWidgetsLock) { snapshot2 = _allWidgets.ToArray(); }
+            foreach (var other in snapshot2)
             {
                 if (other == this || !other.IsVisible) continue;
 
@@ -657,7 +674,27 @@ namespace OrionDesk.UI.Windows
 
         #endregion
 
-        #region 清理
+        #region 关闭控制
+
+        /// <summary>
+        /// 程序主动关闭组件（右键菜单"关闭组件"调用）
+        /// </summary>
+        public void RequestClose()
+        {
+            _requestingClose = true;
+            Close();
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            // 允许关闭：应用退出 或 组件自身调用 RequestClose
+            if (!IsAppClosing && !_requestingClose)
+            {
+                e.Cancel = true; // 拦截 Alt+F4
+                return;
+            }
+            base.OnClosing(e);
+        }
 
         protected override void OnClosed(EventArgs e)
         {

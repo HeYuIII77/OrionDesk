@@ -221,7 +221,7 @@ namespace OrionDesk.UI.Windows
 
         #region 右键菜单
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void Close_Click(object sender, RoutedEventArgs e) => RequestClose();
 
         private void Lock_Click(object sender, RoutedEventArgs e)
         {

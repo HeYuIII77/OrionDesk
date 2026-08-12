@@ -506,7 +506,7 @@ namespace OrionDesk.UI.Windows
             }
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void Close_Click(object sender, RoutedEventArgs e) => RequestClose();
 
         private void Lock_Click(object sender, RoutedEventArgs e)
         {

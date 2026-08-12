@@ -443,3 +443,74 @@
 ### Completed
 - dotnet publish 生成 72MB 自包含单文件 exe
 - README.md 全面更新（新增组件、技术栈、项目结构、Controls 目录）
+
+## 2026-08-12
+
+### 文档中心组件
+
+### Completed
+- DocWidget 文档中心组件（指定根目录、树形结构浏览文件夹和文件）
+- TreeView 懒加载（复用 FolderWidget 占位节点模式）
+- 搜索功能（文件名模糊搜索，实时过滤）
+- 拖放归档（从 Windows 拖入文件/文件夹 → 移动到目标目录，支持冲突处理）
+- 节点级右键菜单（文件夹：新建文档/文件夹、资源管理器、刷新、重命名、删除；文件：打开、所在文件夹、复制路径、重命名、删除）
+- 新建文档（Markdown、文本文档、文件夹，InputDialog 输入名称）
+- 重命名（File.Move / Directory.Move）
+- 删除（确认弹窗，递归删除）
+- DocSettingsWindow 设置窗口（文档目录选择，FolderBrowserDialog）
+- 双击文件用默认程序打开（Process.Start UseShellExecute）
+- 拖放高亮（悬停目标文件夹时蓝色高亮）
+- MainWindow 托盘菜单集成
+
+### Added
+- DocWidget.xaml/.cs - 文档中心组件
+- DocSettingsWindow.xaml/.cs - 文档中心设置窗口
+
+### Modified
+- MainWindow.xaml.cs - 托盘菜单添加"文档中心"、AddWidget/CreateWidgetWindow 注册
+
+### 禁用 Alt+F4 关闭组件
+
+### Completed
+- BaseWidgetWindow 添加 IsAppClosing 静态标志
+- 重写 OnClosing 拦截 Alt+F4（IsAppClosing 为 false 时取消关闭）
+- 添加 RequestClose() 方法供程序主动关闭
+- MainWindow 退出时设置 IsAppClosing 并使用 RequestClose()
+
+### Modified
+- BaseWidgetWindow.cs - 添加 IsAppClosing、RequestClose、OnClosing 重写
+- MainWindow.xaml.cs - 退出时使用 RequestClose 替代 widget.Close()
+
+### UI 透明度调整
+
+### Completed
+- GlassBackground 背景色从 #E61E1E21（90%）调整为 #991E1E21（60%）
+- 所有组件背景更加透明，毛玻璃效果更强
+
+### Modified
+- App.xaml - GlassBackgroundBrush 和 GlassBackground 样式背景色更新
+
+### 稳定性与一致性优化（P0 + P1）
+
+### P0 稳定性修复
+- BaseWidgetWindow._allWidgets 加锁（_allWidgetsLock），Register/Unregister/迭代全部线程安全
+- WeatherService 30 处裸 GetProperty 替换为 SafeGetString/SafeGetDouble 辅助方法（TryGetProperty）
+- MainWindow LoadAndRestore 启动失败添加托盘消息提示
+- ConfigRepository 4 处空 catch 块添加 Debug.WriteLine 日志
+
+### P1 交互统一
+- 锁定按钮位置统一到左侧（Calendar/CmdLauncher/Launcher/QuickTools/Monitor/Clock 6 个组件）
+- StickyNoteWidget 锁按钮尺寸统一为 24x24/FontSize=11
+
+### Modified
+- BaseWidgetWindow.cs - _allWidgetsLock 锁对象、Register/Unregister 加锁、迭代用 ToArray 快照
+- WeatherService.cs - 添加 SafeGetString/SafeGetDouble 辅助方法、30 处 GetProperty 替换
+- MainWindow.xaml.cs - LoadAndRestore catch 添加 ShowTrayMessage
+- ConfigRepository.cs - 添加 using System.Diagnostics、4 处 catch 添加 Debug.WriteLine
+- CalendarWidget.xaml - LockButton HorizontalAlignment Right→Left
+- CmdLauncherWidget.xaml - LockButton HorizontalAlignment Right→Left
+- LauncherWidget.xaml - LockButton HorizontalAlignment Right→Left
+- QuickToolsWidget.xaml - LockButton HorizontalAlignment Right→Left
+- MonitorWidget.xaml - LockButton HorizontalAlignment Right→Left, VerticalAlignment Top→Center
+- ClockWidget.xaml - LockButton HorizontalAlignment Right→Left, VerticalAlignment Top→Center
+- StickyNoteWidget.xaml - LockButton 尺寸 20x20→24x24, FontSize 10→11

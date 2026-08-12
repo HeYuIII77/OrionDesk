@@ -75,7 +75,7 @@
                     <!-- 锁定按钮 -->
                     <Button x:Name="LockButton" Content="🔓"
                             HorizontalAlignment="Left" VerticalAlignment="Center"
-                            Width="20" Height="20" FontSize="10"
+                            Width="24" Height="24" FontSize="11"
                             Background="Transparent" Foreground="#66333333" BorderThickness="0"
                             Cursor="Hand" Click="Lock_Click"
                             ToolTip="锁定"/>

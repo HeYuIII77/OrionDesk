@@ -165,7 +165,7 @@ namespace OrionDesk.UI.Windows
             if (System.Windows.MessageBox.Show("确定要删除这个便签吗？", "确认",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                Close();
+                RequestClose();
             }
         }
 

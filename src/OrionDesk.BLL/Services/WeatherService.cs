@@ -427,15 +427,15 @@ namespace OrionDesk.BLL.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.GetProperty("status").GetString() != "success")
+            if (SafeGetString(root, "status") != "success")
             {
                 Debug.WriteLine("IP定位失败");
                 return null;
             }
 
-            var lat = root.GetProperty("lat").GetDouble();
-            var lon = root.GetProperty("lon").GetDouble();
-            var city = root.GetProperty("city").GetString() ?? "";
+            var lat = SafeGetDouble(root, "lat");
+            var lon = SafeGetDouble(root, "lon");
+            var city = SafeGetString(root, "city");
 
             // ip-api 返回的 city 可能是英文，优先用 regionName
             if (root.TryGetProperty("regionName", out var regionName))
@@ -461,9 +461,9 @@ namespace OrionDesk.BLL.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.GetProperty("code").GetString() != "200")
+            if (SafeGetString(root, "code") != "200")
             {
-                Debug.WriteLine($"天气查询失败: code={root.GetProperty("code").GetString()}");
+                Debug.WriteLine($"天气查询失败: code={SafeGetString(root, "code")}");
                 return null;
             }
 
@@ -472,12 +472,12 @@ namespace OrionDesk.BLL.Services
 
             return new WeatherInfo
             {
-                WeatherText = now.GetProperty("text").GetString() ?? "",
-                Temperature = now.GetProperty("temp").GetString() ?? "",
-                FeelsLike = now.GetProperty("feelsLike").GetString() ?? "",
-                Humidity = now.GetProperty("humidity").GetString() ?? "",
-                WindDir = now.GetProperty("windDir").GetString() ?? "",
-                Icon = now.GetProperty("icon").GetString() ?? ""
+                WeatherText = SafeGetString(now, "text"),
+                Temperature = SafeGetString(now, "temp"),
+                FeelsLike = SafeGetString(now, "feelsLike"),
+                Humidity = SafeGetString(now, "humidity"),
+                WindDir = SafeGetString(now, "windDir"),
+                Icon = SafeGetString(now, "icon")
             };
         }
 
@@ -495,9 +495,9 @@ namespace OrionDesk.BLL.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.GetProperty("code").GetString() != "200")
+            if (SafeGetString(root, "code") != "200")
             {
-                Debug.WriteLine($"空气质量查询失败: code={root.GetProperty("code").GetString()}");
+                Debug.WriteLine($"空气质量查询失败: code={SafeGetString(root, "code")}");
                 return null;
             }
 
@@ -506,11 +506,11 @@ namespace OrionDesk.BLL.Services
 
             return new WeatherInfo
             {
-                Aqi = now.GetProperty("aqi").GetString() ?? "",
-                AirLevel = now.GetProperty("level").GetString() ?? "",
-                AirCategory = now.GetProperty("category").GetString() ?? "",
-                Pm2p5 = now.TryGetProperty("pm2p5", out var pm25) ? pm25.GetString() ?? "" : "",
-                Pm10 = now.TryGetProperty("pm10", out var pm10) ? pm10.GetString() ?? "" : ""
+                Aqi = SafeGetString(now, "aqi"),
+                AirLevel = SafeGetString(now, "level"),
+                AirCategory = SafeGetString(now, "category"),
+                Pm2p5 = SafeGetString(now, "pm2p5"),
+                Pm10 = SafeGetString(now, "pm10")
             };
         }
 
@@ -528,7 +528,7 @@ namespace OrionDesk.BLL.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.GetProperty("code").GetString() != "200")
+            if (SafeGetString(root, "code") != "200")
                 return null;
 
             if (!root.TryGetProperty("daily", out var daily))
@@ -539,14 +539,14 @@ namespace OrionDesk.BLL.Services
             {
                 result.Add(new ForecastDay
                 {
-                    Date = day.GetProperty("fxDate").GetString() ?? "",
-                    TextDay = day.GetProperty("textDay").GetString() ?? "",
-                    TextNight = day.GetProperty("textNight").GetString() ?? "",
-                    TempMax = day.GetProperty("tempMax").GetString() ?? "",
-                    TempMin = day.GetProperty("tempMin").GetString() ?? "",
-                    Humidity = day.TryGetProperty("humidity", out var hum) ? hum.GetString() ?? "" : "",
-                    WindDirDay = day.TryGetProperty("windDirDay", out var wd) ? wd.GetString() ?? "" : "",
-                    UvIndex = day.TryGetProperty("uvIndex", out var uv) ? uv.GetString() ?? "" : ""
+                    Date = SafeGetString(day, "fxDate"),
+                    TextDay = SafeGetString(day, "textDay"),
+                    TextNight = SafeGetString(day, "textNight"),
+                    TempMax = SafeGetString(day, "tempMax"),
+                    TempMin = SafeGetString(day, "tempMin"),
+                    Humidity = SafeGetString(day, "humidity"),
+                    WindDirDay = SafeGetString(day, "windDirDay"),
+                    UvIndex = SafeGetString(day, "uvIndex")
                 });
             }
             return result;
@@ -566,7 +566,7 @@ namespace OrionDesk.BLL.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.GetProperty("code").GetString() != "200")
+            if (SafeGetString(root, "code") != "200")
                 return null;
 
             if (!root.TryGetProperty("warning", out var warning))
@@ -605,7 +605,7 @@ namespace OrionDesk.BLL.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.GetProperty("code").GetString() != "200")
+            if (SafeGetString(root, "code") != "200")
                 return null;
 
             if (!root.TryGetProperty("daily", out var daily))
@@ -641,7 +641,7 @@ namespace OrionDesk.BLL.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.GetProperty("code").GetString() != "200")
+            if (SafeGetString(root, "code") != "200")
                 return null;
 
             var sunrise = root.TryGetProperty("sunrise", out var sr) ? sr.GetString() ?? "" : "";
@@ -672,6 +672,26 @@ namespace OrionDesk.BLL.Services
             // 清除预警缓存
             _lastWarningRequest = DateTimeOffset.MinValue;
             _cachedWarnings = null;
+        }
+
+        /// <summary>
+        /// 安全获取 JSON 字符串属性（不存在时返回默认值）
+        /// </summary>
+        private static string SafeGetString(JsonElement element, string propertyName, string defaultValue = "")
+        {
+            if (element.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String)
+                return prop.GetString() ?? defaultValue;
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// 安全获取 JSON 数字属性（不存在时返回默认值）
+        /// </summary>
+        private static double SafeGetDouble(JsonElement element, string propertyName, double defaultValue = 0)
+        {
+            if (element.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.Number)
+                return prop.GetDouble();
+            return defaultValue;
         }
 
         public void Dispose()

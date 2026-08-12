@@ -60,8 +60,9 @@ namespace OrionDesk.UI
                 else
                 {
                     // 用户主动退出，关闭所有组件
+                    BaseWidgetWindow.IsAppClosing = true;
                     foreach (var widget in _activeWidgets.ToList())
-                        widget.Close();
+                        widget.RequestClose();
 
                     if (_trayIcon != null)
                     {
@@ -82,6 +83,7 @@ namespace OrionDesk.UI
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[启动] 严重异常: {ex}");
+                    ShowTrayMessage("组件恢复失败，请检查配置文件");
                 }
             }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
@@ -151,6 +153,7 @@ namespace OrionDesk.UI
             addMenu.DropDownItems.Add("快捷工具", null, (s, e) => AddWidget("quicktools"));
             addMenu.DropDownItems.Add("日历事项", null, (s, e) => AddWidget("calendar"));
             addMenu.DropDownItems.Add("CMD 启动器", null, (s, e) => AddWidget("cmdlauncher"));
+            addMenu.DropDownItems.Add("文档中心", null, (s, e) => AddWidget("doc"));
             contextMenu.Items.Add(addMenu);
 
             contextMenu.Items.Add(new ToolStripSeparator());
@@ -241,6 +244,7 @@ namespace OrionDesk.UI
                 "quicktools" => (240, 320),
                 "calendar" => (280, 360),
                 "cmdlauncher" => (160, 160),
+                "doc" => (300, 400),
                 _ => (200, 100)
             };
 
@@ -272,6 +276,7 @@ namespace OrionDesk.UI
                 "quicktools" => new QuickToolsWidget(config, _widgetManager),
                 "calendar" => new CalendarWidget(config, _widgetManager),
                 "cmdlauncher" => new CmdLauncherWidget(config, _widgetManager),
+                "doc" => new DocWidget(config, _widgetManager),
                 _ => null
             };
 

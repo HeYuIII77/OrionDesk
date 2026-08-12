@@ -53,7 +53,7 @@
 
             <!-- 右上角锁定按钮 -->
             <Button x:Name="LockButton" Content="🔓" Grid.Row="0"
-                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    HorizontalAlignment="Left" VerticalAlignment="Center"
                     Style="{StaticResource LockButtonStyle}"
                     Click="Lock_Click" Margin="0,-6,-6,0"
                     ToolTip="锁定"

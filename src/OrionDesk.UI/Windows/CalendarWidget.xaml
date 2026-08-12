@@ -49,10 +49,14 @@
 
             <!-- 标题栏：月份导航 -->
             <Grid Grid.Row="0" Margin="0,0,0,6">
-                <Button x:Name="LockButton" Content="🔓"
-                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Style="{StaticResource LockButtonStyle}"
-                        Click="Lock_Click" ToolTip="锁定"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Button x:Name="LockButton" Content="🔓"
+                            Style="{StaticResource LockButtonStyle}"
+                            Click="Lock_Click" ToolTip="锁定"/>
+                    <Button x:Name="TodayButton" Content="今天"
+                            Style="{StaticResource LockButtonStyle}" FontSize="11"
+                            Click="Today_Click" ToolTip="回到今天" Margin="4,0,0,0"/>
+                </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Button x:Name="PrevMonthButton" Content="◀" Style="{StaticResource LockButtonStyle}"
@@ -63,11 +67,6 @@
                     <Button x:Name="NextMonthButton" Content="▶" Style="{StaticResource LockButtonStyle}"
                             Click="NextMonth_Click" ToolTip="下一月" FontSize="10"/>
                 </StackPanel>
-
-                <Button x:Name="TodayButton" Content="今天"
-                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                        Style="{StaticResource LockButtonStyle}" FontSize="11"
-                        Click="Today_Click" ToolTip="回到今天"/>
             </Grid>
 
             <!-- 星期头 -->

@@ -348,7 +348,7 @@ namespace OrionDesk.UI.Windows
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            RequestClose();
         }
 
         #endregion
