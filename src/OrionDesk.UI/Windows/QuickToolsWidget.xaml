@@ -65,19 +65,19 @@
 
             <!-- 标题栏 -->
             <Grid Grid.Row="0" Margin="0,0,0,6">
-                <Button x:Name="LockButton" Content="🔓"
-                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                        Style="{StaticResource LockButtonStyle}"
-                        Click="Lock_Click"
-                        ToolTip="锁定"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Button x:Name="LockButton" Content="🔓"
+                            Style="{StaticResource LockButtonStyle}"
+                            Click="Lock_Click"
+                            ToolTip="锁定"/>
+                    <Button Content="＋"
+                            Style="{StaticResource LockButtonStyle}"
+                            Click="AddTool_Click"
+                            ToolTip="添加工具" FontSize="14"/>
+                </StackPanel>
                 <TextBlock Text="⚡ 快捷工具"
                            Foreground="White" FontFamily="Segoe UI" FontSize="12"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <Button Content="＋"
-                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                        Style="{StaticResource LockButtonStyle}"
-                        Click="AddTool_Click"
-                        ToolTip="添加工具" FontSize="14"/>
             </Grid>
 
             <!-- 工具图标网格 -->
