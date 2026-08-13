@@ -2,10 +2,14 @@
 
 ## High
 
-- [ ] 长时间运行稳定性验证（24h+ 内存/GDI 句柄监控）— 诊断工具已完成，待实际运行测试
+- [ ] P1 续：右键菜单结构统一（功能操作 → 分隔线 → 刷新/设置 → 分隔线 → 锁定 → 分隔线 → 关闭组件）
+- [ ] P2：视觉统一（引用 App.xaml 配色资源 TertiaryTextBrush/SecondaryTextBrush 等、引用文本样式、标题栏统一 FontSize=12/Foreground=White/Margin=0,0,0,6）
+- [ ] 长时间运行稳定性验证（24h+ 内存/GDI 句柄监控）
 
 ## Medium
 
+- [ ] P3：代码清理（删除 2 个 Class1.cs、Timer OnClosed 清理）
+- [ ] P4：全局搜索（Ctrl+Space 打开，搜索应用/项目/文档，上下键选择 Enter 打开 Esc 关闭）
 - [ ] 快捷工具第二阶段：网络诊断工具（Ping/Tracert/Nslookup/Netstat/远程桌面/SSH）
 - [ ] 快捷工具第二阶段：数据库快捷入口（服务状态检测/连接测试）
 - [ ] 快捷工具第二阶段：全局快捷键（RegisterHotKey API）

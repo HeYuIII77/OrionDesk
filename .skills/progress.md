@@ -514,3 +514,10 @@
 - MonitorWidget.xaml - LockButton HorizontalAlignment Right→Left, VerticalAlignment Top→Center
 - ClockWidget.xaml - LockButton HorizontalAlignment Right→Left, VerticalAlignment Top→Center
 - StickyNoteWidget.xaml - LockButton 尺寸 20x20→24x24, FontSize 10→11
+
+### UI 修复
+- 日历组件锁按钮与"今天"按钮重叠 → 并排 StackPanel 左侧布局
+- DocSettingsWindow 路径框高度 32→38，窗口高度 240→250
+
+### 发布
+- dotnet publish 生成 72MB 自包含单文件 exe → publish/OrionDesk.UI.exe

@@ -176,7 +176,6 @@ namespace OrionDesk.UI.Windows
 
             var apiKey = _widgetManager.Settings.Weather.ApiKey;
             var apiHost = _widgetManager.Settings.Weather.ApiHost;
-            System.Diagnostics.Debug.WriteLine($"[天气] ApiKey={apiKey}, ApiHost={apiHost}");
 
             if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(apiHost))
             {

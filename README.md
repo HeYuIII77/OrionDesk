@@ -17,6 +17,7 @@
 | **快捷工具** | 开发者快捷操作中心：系统管理工具、开发环境入口、自定义快捷方式、管理员权限启动 |
 | **日历事项** | 月视图日历、事项管理（工作/生活/纪念日/提醒）、重复事项、倒计时/正计时 |
 | **CMD 启动器** | 大图标一键启动 CMD 并自动执行命令（可自定义图标/名称/命令/起始目录） |
+| **文档中心** | 指定文档根目录、树形结构浏览、搜索、拖入归档、新建/重命名/删除文档和文件夹 |
 
 ### 天气系统
 
@@ -80,9 +81,16 @@ OrionDesk/
 │   │   │   ├── QuickToolsWidget.xaml  # 快捷工具组件
 │   │   │   ├── CalendarWidget.xaml     # 日历事项组件
 │   │   │   ├── CmdLauncherWidget.xaml  # CMD 启动器组件
+│   │   │   ├── DocWidget.xaml         # 文档中心组件
 │   │   │   ├── DiagnosticsWindow.xaml # 诊断监控窗口
 │   │   │   ├── SettingsWindow.xaml  # 设置页面
-│   │   │   └── WeatherDetailWindow.xaml # 天气详情弹窗
+│   │   │   ├── WeatherDetailWindow.xaml # 天气详情弹窗
+│   │   │   ├── DocSettingsWindow.xaml   # 文档中心设置
+│   │   │   ├── EventEditWindow.xaml    # 事项编辑对话框
+│   │   │   ├── EventListWindow.xaml    # 事项列表弹窗
+│   │   │   ├── QuickToolEditWindow.xaml # 快捷工具编辑对话框
+│   │   │   ├── CmdLauncherSettingsWindow.xaml # CMD 启动器设置
+│   │   │   └── InputDialog.xaml        # 通用输入对话框
 │   │   ├── Controls/
 │   │   │   ├── DarkComboBox.xaml    # 自定义暗色下拉框
 │   │   │   └── DarkDatePicker.xaml  # 自定义暗色日期选择器
@@ -165,6 +173,15 @@ OrionDesk/
 - 右键 → 设置 → 配置显示名称、图标（emoji）、启动命令、起始目录
 - 默认执行 `claude`，起始目录 `C:\WINDOWS\system32`
 
+**文档中心**
+- 右键 → 设置 → 选择文档根目录
+- 树形结构浏览文件夹和文件
+- 顶部搜索框实时过滤文件名
+- 从 Windows 拖入文件/文件夹 → 移动到当前目录（归档）
+- 右键文件夹 → 新建 Markdown/文本文档/文件夹、重命名、删除、用资源管理器打开
+- 右键文件 → 打开、复制路径、重命名、删除
+- 双击文件用默认程序打开
+
 **诊断监控**
 - 托盘右键 → 诊断 → 打开诊断窗口
 - 实时显示进程内存/GDI/USER/线程/句柄/GC 指标
@@ -179,7 +196,7 @@ OrionDesk/
 | 移动组件 | 鼠标按住组件空白区域拖拽 |
 | 调整大小 | 拖拽组件右下角（自动吸附对齐） |
 | 切换样式 | 右键组件 → 菜单选项 |
-| 锁定组件 | 右键 → 锁定，或点击右上角锁图标 🔒 |
+| 锁定组件 | 右键 → 锁定，或点击左上角锁图标 🔒 |
 | 添加组件 | 右键托盘图标 → 添加组件 |
 | 删除组件 | 右键组件 → 关闭组件 |
 | 隐藏全部 | 右键托盘图标 → 隐藏所有组件 / 双击托盘图标 |

@@ -94,7 +94,7 @@
                     <TextBlock Text="和风天气 API" Style="{StaticResource SectionTitleStyle}"/>
                     <TextBlock Text="API Key" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
                     <TextBox x:Name="ApiKeyBox" Style="{StaticResource InputStyle}"/>
-                    <TextBlock Text="API Host（项目专属，如 m24d95fgre.re.qweatherapi.com）"
+                    <TextBlock Text="API Host"
                                Style="{StaticResource MutedTextStyle}" Margin="0,6,0,6"/>
                     <TextBox x:Name="ApiHostBox" Style="{StaticResource InputStyle}"/>
 

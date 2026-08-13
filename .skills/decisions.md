@@ -287,3 +287,45 @@
 **Impact**: 新增 CmdLauncherWidget 组件，灰色圆角背景 + 白色图标，右键设置
 
 **Status**: Active
+
+## 2026-08-12
+
+### Decision: 禁用 Alt+F4 关闭组件
+
+**Reason**: 用户不希望误按 Alt+F4 关闭桌面组件，组件应仅通过托盘菜单或右键菜单关闭
+
+**Impact**: BaseWidgetWindow 重写 OnClosing，添加 IsAppClosing（应用退出）和 RequestClose（单组件关闭）两个通道，全部 10 个组件的 Close_Click 改为 RequestClose
+
+**Status**: Active
+
+### Decision: 文档中心组件使用目录结构即数据源
+
+**Reason**: 不引入数据库，根目录路径存 WidgetConfig.Settings["rootPath"]，TreeView 懒加载展示文件夹和文件
+
+**Impact**: 新增 DocWidget + DocSettingsWindow，支持树形浏览、搜索、拖入归档（移动）、新建/重命名/删除
+
+**Status**: Active
+
+### Decision: 锁定按钮统一到左侧
+
+**Reason**: 多数组件锁按钮位置不统一（6 个右侧、4 个左侧），统一到左侧可与右侧的设置按钮分离
+
+**Impact**: Calendar/CmdLauncher/Launcher/QuickTools/Monitor/Clock 6 个组件从右侧改到左侧
+
+**Status**: Active
+
+### Decision: WeatherService 使用 SafeGetString/SafeGetDouble 辅助方法
+
+**Reason**: 30 处裸 GetProperty() 调用在 API 返回格式变化时会抛 KeyNotFoundException，导致天气永远不更新
+
+**Impact**: 添加 SafeGetString/SafeGetDouble 私有静态方法（TryGetProperty + 默认值），替换所有裸 GetProperty
+
+**Status**: Active
+
+### Decision: _allWidgets 静态列表加锁
+
+**Reason**: RegisterWidget/UnregisterWidget 与 CalculateSnap/CalculateResizeSnap 迭代并发，组件拖拽时关闭另一个组件会抛 InvalidOperationException
+
+**Impact**: 添加 _allWidgetsLock 对象，Register/Unregister 加锁，迭代用 ToArray 快照
+
+**Status**: Active

@@ -1,73 +1,54 @@
 # Current Development Context
 
-**Last updated**: 2026-08-07
+**Last updated**: 2026-08-12
 
 ## Currently Working On
 
-- OrionDesk 桌面小组件工具 — 多个新组件和功能已完成
+- 稳定性与一致性优化阶段（P0 已完成，P1 部分完成）
 
 ## Current Module
 
-- 无正在进行的模块
+- 全局：稳定性修复 + 交互/视觉统一
 
 ## Completed This Session
 
-### 诊断监控
-- ✅ DiagnosticsService 诊断服务（进程级指标采集：内存/GDI/USER/线程/句柄/GC）
-- ✅ DiagnosticsWindow 诊断窗口（实时快照 + 历史趋势 + CSV 日志）
-- ✅ Win32 API GetGuiResources 采集 GDI/USER 对象数
-- ✅ MainWindow 托盘菜单集成"诊断"入口
+### 文档中心组件
+- ✅ DocWidget 树形结构浏览（指定根目录、懒加载）
+- ✅ 搜索功能（文件名模糊搜索）
+- ✅ 拖放归档（从 Windows 拖入 → 移动到目标目录，冲突处理）
+- ✅ 右键菜单（新建 Markdown/文本文档/文件夹、打开、重命名、删除、资源管理器、复制路径）
+- ✅ DocSettingsWindow 设置窗口
+- ✅ MainWindow 托盘菜单集成
 
-### 快捷工具组件
-- ✅ QuickToolItem 模型 + QuickToolType 枚举（App/Folder/Url/Shell）
-- ✅ QuickToolsWidget 图标网格组件（64×64 按钮、WrapPanel 自动换行）
-- ✅ 16 个预置工具（系统 12 + 开发 4），可自由编辑/删除/新增
-- ✅ 管理员权限启动（Verb="runas" + UAC 取消静默处理）
-- ✅ QuickToolEditWindow 编辑对话框（名称/图标/类型/路径/参数/管理员）
-- ✅ 修复 NullReferenceException（UpdateTypeVisibility 控件未就绪）
-- ✅ 移除 IsPreset 限制，所有工具可编辑删除
+### 禁用 Alt+F4
+- ✅ BaseWidgetWindow 添加 IsAppClosing + RequestClose
+- ✅ OnClosing 拦截 Alt+F4，允许右键关闭和应用退出
+- ✅ 全部 10 个组件 Close_Click 改为 RequestClose
 
-### SVN 支持
-- ✅ VcsType 枚举（None/Git/Svn）
-- ✅ SVN 仓库发现（.svn 目录检测）
-- ✅ RunSvnAsync（svn CLI 调用、UTF-8 + 超时 + Kill）
-- ✅ CheckSvnRepoAsync（svn info + svn status → 状态映射）
-- ✅ GitSyncWidget 显示 [Git]/[SVN] 标签、拖拽支持 .svn
+### 背景透明度
+- ✅ GlassBackground 从 #E61E1E21 (90%) → #991E1E21 (60%)
 
-### 日历事项组件
-- ✅ CalendarEvent 模型（Title/Start/End/IsAllDay/Type/Repeat/Note）
-- ✅ CalendarWidget 月视图（6×7 网格、今日高亮、事项颜色标记）
-- ✅ 重复事项（不重复/每天/每周/每月/每年）
-- ✅ 倒计时区域（组件底部，最近 5 个倒计时/正计时）
-- ✅ EventEditWindow 编辑对话框
-- ✅ EventListWindow 事项列表弹窗（编辑/删除/新增）
+### P0 稳定性修复
+- ✅ _allWidgets 静态 List 加锁（_allWidgetsLock），迭代用 ToArray 快照
+- ✅ WeatherService 30 处裸 GetProperty → SafeGetString/SafeGetDouble
+- ✅ MainWindow LoadAndRestore 启动失败添加托盘消息提示
+- ✅ ConfigRepository 4 处空 catch 添加 Debug.WriteLine
 
-### CMD 启动器组件
-- ✅ CmdLauncherWidget 大图标组件（灰色背景 + 白色图标）
-- ✅ 点击启动 CMD 并自动执行命令
-- ✅ CmdLauncherSettingsWindow（设置名称/图标/命令/起始目录）
-- ✅ 右键 → 设置，可自定义图标 emoji
+### P1 交互统一（部分）
+- ✅ 锁定按钮位置统一到左侧（6 个组件从右侧改到左侧）
+- ✅ StickyNoteWidget 锁按钮尺寸统一为 24x24/FontSize=11
+- ✅ 日历组件锁按钮与"今天"按钮布局修复（并排 StackPanel）
 
-### 自定义暗色控件
-- ✅ DarkComboBox 自定义暗色下拉框（Popup + ListBox，替代标准 ComboBox）
-- ✅ DarkDatePicker 自定义暗色日期选择器（TextBox + Calendar 弹出层）
-- ✅ InputDialog 通用输入对话框
-
-### UI 修复
-- ✅ 文件夹映射子目录缩进（ItemsPresenter Margin=16,0,0,0）
-- ✅ 快捷工具锁图标切换修复（添加 UpdateLockButton 调用）
-- ✅ 日历编辑对话框布局优化（DatePicker/ComboBox 暗色化）
-- ✅ 时间输入框宽度调整（48px → 60px）
-- ✅ CMD 设置窗口标题、滚动条、图标颜色修复
-
-### 其他
-- ✅ 调整大小吸附（右/下边缘自动对齐其他组件）
-- ✅ 发布便携版（72MB 自包含单文件）
-- ✅ README.md 全面更新
+### 发布
+- ✅ dotnet publish 生成 72MB 自包含单文件 exe
 
 ## Not Yet Complete
 
-- 长时间运行稳定性验证（24h+ 内存/GDI 句柄监控）
+- P1 续：右键菜单结构统一（8 个 XAML）
+- P2：视觉统一（引用 App.xaml 资源、标题栏统一）
+- P3：代码清理（删除 Class1.cs、Timer 清理）
+- P4：全局搜索（Ctrl+Space）
+- 长时间运行稳定性验证（24h+）
 
 ## Blockers
 
@@ -75,6 +56,7 @@
 
 ## Next Steps
 
-- 长时间运行监控（内存、GDI 句柄实际测试）
-- 快捷工具第二阶段：网络诊断工具、数据库入口、全局快捷键
-- 日历组件后续：周视图/日视图、与天气/快捷工具/Git 联动
+- 继续 P1：右键菜单结构统一
+- P2：视觉统一（引用 App.xaml 配色/文本/圆角资源）
+- P3：代码清理
+- P4：全局搜索设计与实现
