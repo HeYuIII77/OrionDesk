@@ -29,6 +29,7 @@ namespace OrionDesk.UI.Windows
         public GitSyncWidget(WidgetConfig config, WidgetManager widgetManager)
             : base(config, widgetManager)
         {
+            AcceptFileDrop = true; // 启用 Win32 文件拖放（绕过 WorkerW z-order 限制）
             InitializeComponent();
 
             _gitService = new GitSyncService();
@@ -431,47 +432,37 @@ namespace OrionDesk.UI.Windows
             }
         }
 
-        private void OnDragOver(object sender, System.Windows.DragEventArgs e)
+        /// <summary>
+        /// Win32 文件拖放下事件（绕过 WorkerW z-order 限制）
+        /// </summary>
+        protected override void OnFileDrop(string[] files)
         {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
-                e.Effects = System.Windows.DragDropEffects.Copy;
-            else
-                e.Effects = System.Windows.DragDropEffects.None;
-            e.Handled = true;
-        }
-
-        private void OnDrop(object sender, System.Windows.DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+            if (files.Length > 0)
             {
-                var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
-                if (files.Length > 0)
+                var path = files[0];
+
+                if (Directory.Exists(path))
                 {
-                    var path = files[0];
+                    // 检查是否是 VCS 仓库（.git 或 .svn）
+                    var isGit = Directory.Exists(Path.Combine(path, ".git"));
+                    var isSvn = Directory.Exists(Path.Combine(path, ".svn"));
 
-                    if (Directory.Exists(path))
+                    if (isGit || isSvn)
                     {
-                        // 检查是否是 VCS 仓库（.git 或 .svn）
-                        var isGit = Directory.Exists(Path.Combine(path, ".git"));
-                        var isSvn = Directory.Exists(Path.Combine(path, ".svn"));
-
-                        if (isGit || isSvn)
+                        // 本身是仓库，添加到额外列表
+                        if (!_settings.ExtraRepos.Contains(path, StringComparer.OrdinalIgnoreCase))
                         {
-                            // 本身是仓库，添加到额外列表
-                            if (!_settings.ExtraRepos.Contains(path, StringComparer.OrdinalIgnoreCase))
-                            {
-                                _settings.ExtraRepos.Add(path);
-                                SaveSettings();
-                                RefreshAll();
-                            }
-                        }
-                        else
-                        {
-                            // 是目录但不是仓库，设为扫描路径
-                            _settings.ScanPath = path;
+                            _settings.ExtraRepos.Add(path);
                             SaveSettings();
                             RefreshAll();
                         }
+                    }
+                    else
+                    {
+                        // 是目录但不是仓库，设为扫描路径
+                        _settings.ScanPath = path;
+                        SaveSettings();
+                        RefreshAll();
                     }
                 }
             }

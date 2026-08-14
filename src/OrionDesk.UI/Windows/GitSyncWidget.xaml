@@ -3,10 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:OrionDesk.UI.Windows"
         Title="Git 同步监控"
-        Background="Transparent"
-        AllowDrop="True"
-        Drop="OnDrop"
-        DragOver="OnDragOver">
+        Background="Transparent">
     <Window.Resources>
         <!-- 仓库名称样式 -->
         <Style x:Key="RepoNameStyle" TargetType="TextBlock">

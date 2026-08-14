@@ -3,10 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:OrionDesk.UI.Windows"
         Title="文件夹映射"
-        Background="Transparent"
-        AllowDrop="True"
-        Drop="OnDrop"
-        DragOver="OnDragOver">
+        Background="Transparent">
     <Window.Resources>
         <!-- 覆盖系统高亮色（焦点/非焦点选中都用深色） -->
         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF2A2A2A"/>
@@ -121,6 +118,10 @@
     <Border Style="{StaticResource GlassBackground}">
         <Border.ContextMenu>
             <ContextMenu>
+                <MenuItem Header="设置" Click="Settings_Click"/>
+                <Separator/>
+                <MenuItem Header="刷新" Click="Refresh_Click"/>
+                <Separator/>
                 <MenuItem x:Name="LockMenuItem" Header="锁定" Click="Lock_Click"/>
                 <Separator/>
                 <MenuItem Header="关闭组件" Click="Close_Click"/>
@@ -143,6 +144,10 @@
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            Foreground="#88FFFFFF" FontSize="11" FontFamily="Segoe UI"
                            Text="拖入文件夹路径开始"/>
+                <Button x:Name="RefreshButton" Content="🔄"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Style="{StaticResource LockButtonStyle}"
+                        Click="Refresh_Click" ToolTip="刷新"/>
             </Grid>
 
             <!-- 树形文件列表（外层 ScrollViewer 控制滚动） -->

@@ -521,3 +521,33 @@
 
 ### 发布
 - dotnet publish 生成 72MB 自包含单文件 exe → publish/OrionDesk.UI.exe
+
+## 2026-08-13
+
+### 拖放功能修复（WorkerW z-order 问题）
+
+### Completed
+- BaseWidgetWindow 添加 Win32 WM_DROPFILES 支持（绕过 WorkerW 子窗口无法接收 OLE DragDrop 的限制）
+- 新增 Win32 API：DragAcceptFiles、DragQueryFile、DragFinish
+- 新增 AcceptFileDrop 属性（子类设为 true 启用）和 OnFileDrop 虚方法
+- WndProc 钩子处理 WM_DROPFILES 消息，提取文件路径后调用 OnFileDrop
+- LauncherWidget 从 WPF DragDrop 切换到 Win32 WM_DROPFILES
+- DocWidget 从 WPF DragDrop 切换到 Win32 WM_DROPFILES（保留 TreeViewItem 内部拖放：DocTree.AllowDrop = true）
+- FolderWidget 从 WPF DragDrop 切换到 Win32 WM_DROPFILES
+- GitSyncWidget 从 WPF DragDrop 切换到 Win32 WM_DROPFILES
+- 移除 4 个组件的 WPF AllowDrop/Drop/DragOver 属性和事件处理
+- 移除 LauncherWidget/DocWidget UpdateLockButton 中的 AllowDrop 赋值
+
+### Root Cause
+BaseWidgetWindow 通过 SetParent 将窗口挂到 WorkerW（桌面底层窗口），窗口处于所有应用程序后面。WPF 的 OLE DragDrop 机制需要目标窗口在前台窗口层级中，而 WorkerW 子窗口不在该层级中，导致拖拽事件无法路由到组件窗口。
+
+### Modified
+- BaseWidgetWindow.cs - 添加 using System.Collections.Generic/System.IO、Win32 API 声明（DragAcceptFiles/DragQueryFile/DragFinish）、WM_DROPFILES 常量、AcceptFileDrop/OnFileDrop、WndProc 钩子
+- LauncherWidget.xaml - 移除 AllowDrop/Drop/DragOver
+- LauncherWidget.xaml.cs - 构造函数设 AcceptFileDrop=true、OnDragOver/OnDrop→OnFileDrop、UpdateLockButton 移除 AllowDrop
+- DocWidget.xaml - 移除 AllowDrop/Drop/DragOver
+- DocWidget.xaml.cs - 构造函数设 AcceptFileDrop=true + DocTree.AllowDrop=true、OnDragOver/OnDrop→OnFileDrop、UpdateLockButton 移除 AllowDrop
+- FolderWidget.xaml - 移除 AllowDrop/Drop/DragOver
+- FolderWidget.xaml.cs - 构造函数设 AcceptFileDrop=true、OnDragOver/OnDrop→OnFileDrop
+- GitSyncWidget.xaml - 移除 AllowDrop/Drop/DragOver
+- GitSyncWidget.xaml.cs - 构造函数设 AcceptFileDrop=true、OnDragOver/OnDrop→OnFileDrop

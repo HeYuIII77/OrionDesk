@@ -29,9 +29,11 @@ namespace OrionDesk.UI.Windows
         public DocWidget(WidgetConfig config, WidgetManager widgetManager)
             : base(config, widgetManager)
         {
+            AcceptFileDrop = true; // 启用 Win32 文件拖放（绕过 WorkerW z-order 限制）
             InitializeComponent();
 
             // 注册 TreeViewItem 级别的拖放事件（XAML 中与 TreeView 冲突，改用 AddHandler）
+            DocTree.AllowDrop = true; // 内部拖放需要 AllowDrop
             DocTree.AddHandler(TreeViewItem.DragOverEvent, new System.Windows.DragEventHandler(TreeViewItem_DragOver), true);
             DocTree.AddHandler(TreeViewItem.DragLeaveEvent, new System.Windows.DragEventHandler(TreeViewItem_DragLeave), true);
             DocTree.AddHandler(TreeViewItem.DropEvent, new System.Windows.DragEventHandler(TreeViewItem_Drop), true);
@@ -295,21 +297,14 @@ namespace OrionDesk.UI.Windows
 
         #region 拖放（从 Windows 拖入文件/文件夹 → 移动到目标目录）
 
-        private void OnDragOver(object sender, System.Windows.DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
-                e.Effects = System.Windows.DragDropEffects.Move;
-            else
-                e.Effects = System.Windows.DragDropEffects.None;
-            e.Handled = true;
-        }
-
-        private void OnDrop(object sender, System.Windows.DragEventArgs e)
+        /// <summary>
+        /// Win32 文件拖放下事件（绕过 WorkerW z-order 限制）
+        /// </summary>
+        protected override void OnFileDrop(string[] files)
         {
             // 没有悬停在具体节点上 → 移动到根目录
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop) && !string.IsNullOrEmpty(_rootPath))
+            if (!string.IsNullOrEmpty(_rootPath))
             {
-                var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
                 MoveFilesToTarget(files, _rootPath);
             }
         }
@@ -928,8 +923,6 @@ namespace OrionDesk.UI.Windows
             LockButton.ToolTip = IsLocked ? "解锁" : "锁定";
             LockMenuItem.IsChecked = IsLocked;
             LockMenuItem.Header = IsLocked ? "解锁" : "锁定";
-
-            AllowDrop = !IsLocked;
         }
 
         #endregion

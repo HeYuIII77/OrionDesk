@@ -27,11 +27,11 @@
             </Grid.RowDefinitions>
 
             <!-- 标题 -->
-            <TextBlock Text="文档中心设置" FontSize="16" FontWeight="SemiBold"
+            <TextBlock x:Name="TitleText" Text="文档中心设置" FontSize="16" FontWeight="SemiBold"
                        Foreground="White" Margin="0,0,0,20"/>
 
-            <!-- 文档目录 -->
-            <TextBlock Text="文档目录" Style="{StaticResource LabelStyle}" Grid.Row="1"/>
+            <!-- 路径标签 -->
+            <TextBlock x:Name="PathLabel" Text="文档目录" Style="{StaticResource LabelStyle}" Grid.Row="1"/>
             <Grid Grid.Row="2" Margin="0,0,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

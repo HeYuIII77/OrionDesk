@@ -6,10 +6,7 @@
         xmlns:local="clr-namespace:OrionDesk.UI.Windows"
         mc:Ignorable="d"
         Title="启动器"
-        Background="Transparent"
-        AllowDrop="True"
-        Drop="OnDrop"
-        DragOver="OnDragOver">
+        Background="Transparent">
     <Window.Resources>
         <!-- 应用按钮样式（图标模式） -->
         <Style x:Key="AppButtonStyle" TargetType="Button">

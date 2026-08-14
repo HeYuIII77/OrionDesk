@@ -9,8 +9,7 @@ using OrionDesk.BLL.Services;
 namespace OrionDesk.UI.Windows
 {
     /// <summary>
-    /// 时钟组件
-    /// 支持数字和模拟两种样式
+    /// 时钟组件（数字时钟 + 日期 + 农历 + 天气）
     /// </summary>
     public partial class ClockWidget : BaseWidgetWindow
     {
@@ -19,7 +18,6 @@ namespace OrionDesk.UI.Windows
         private readonly ClockSettings _settings;
         private readonly LunarCalendarService _lunarService;
         private readonly WeatherService _weatherService;
-        private bool _isDigital = true;
         private bool _showLunar = true;
         private bool _showWeather = true;
         private WeatherInfo? _lastWeatherInfo;
@@ -51,13 +49,8 @@ namespace OrionDesk.UI.Windows
             };
             _weatherTimer.Tick += WeatherTimer_Tick;
 
-            // 窗口大小调整事件
-            SizeChanged += ClockWidget_SizeChanged;
-
             // 直接初始化（InitializeComponent 后控件已可用）
             LoadLockState();
-            UpdateClockStyle();
-            UpdateClockMenuState();
             UpdateLockButton();
             UpdateClock();
             _timer.Start();
@@ -74,9 +67,6 @@ namespace OrionDesk.UI.Windows
         {
             var settings = new ClockSettings();
 
-            if (config.Settings.TryGetValue("style", out var style))
-                settings.Style = style.ToString() ?? "Digital";
-
             if (config.Settings.TryGetValue("timeFormat", out var timeFormat))
                 settings.TimeFormat = timeFormat.ToString() ?? "HH:mm:ss";
 
@@ -86,9 +76,6 @@ namespace OrionDesk.UI.Windows
             if (config.Settings.TryGetValue("dateFormat", out var dateFormat))
                 settings.DateFormat = dateFormat.ToString() ?? "yyyy-MM-dd dddd";
 
-            // 应用初始样式（不在这里调用 UpdateClockStyle，等窗口加载完成后调用）
-            _isDigital = settings.Style == "Digital";
-
             return settings;
         }
 
@@ -97,7 +84,6 @@ namespace OrionDesk.UI.Windows
         /// </summary>
         private void SaveSettings()
         {
-            _config.Settings["style"] = _isDigital ? "Digital" : "Analog";
             _config.Settings["timeFormat"] = _settings.TimeFormat;
             _config.Settings["showDate"] = _settings.ShowDate;
             _config.Settings["dateFormat"] = _settings.DateFormat;
@@ -132,18 +118,7 @@ namespace OrionDesk.UI.Windows
         {
             var now = DateTime.Now;
 
-            if (_isDigital)
-            {
-                // 数字时钟
-                TimeText.Text = now.ToString(_settings.TimeFormat);
-            }
-            else
-            {
-                // 模拟时钟
-                UpdateAnalogClock(now);
-            }
-
-            // 日期和农历在两种模式下都更新
+            TimeText.Text = now.ToString(_settings.TimeFormat);
             DateText.Text = now.ToString(_settings.DateFormat);
 
             if (_showLunar)
@@ -302,108 +277,7 @@ namespace OrionDesk.UI.Windows
             }
         }
 
-        /// <summary>
-        /// 更新模拟时钟指针
-        /// </summary>
-        private void UpdateAnalogClock(DateTime time)
-        {
-            // 时针：每小时30度，每分钟0.5度
-            double hourAngle = (time.Hour % 12) * 30 + time.Minute * 0.5;
-            RotateHourHand(hourAngle);
-
-            // 分针：每分钟6度
-            double minuteAngle = time.Minute * 6 + time.Second * 0.1;
-            RotateMinuteHand(minuteAngle);
-
-            // 秒针：每秒6度
-            double secondAngle = time.Second * 6;
-            RotateSecondHand(secondAngle);
-        }
-
-        private void RotateHourHand(double angle)
-        {
-            var transform = new System.Windows.Media.RotateTransform(angle, 50, 50);
-            HourHand.RenderTransform = transform;
-        }
-
-        private void RotateMinuteHand(double angle)
-        {
-            var transform = new System.Windows.Media.RotateTransform(angle, 50, 50);
-            MinuteHand.RenderTransform = transform;
-        }
-
-        private void RotateSecondHand(double angle)
-        {
-            var transform = new System.Windows.Media.RotateTransform(angle, 50, 50);
-            SecondHand.RenderTransform = transform;
-        }
-
-        /// <summary>
-        /// 更新时钟样式（数字/模拟）
-        /// </summary>
-        private void UpdateClockStyle()
-        {
-            if (_isDigital)
-            {
-                TimeText.Visibility = Visibility.Visible;
-                AnalogClock.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                TimeText.Visibility = Visibility.Collapsed;
-                AnalogClock.Visibility = Visibility.Visible;
-            }
-
-            // 日期和农历在两种模式下都显示
-            DateText.Visibility = _settings.ShowDate ? Visibility.Visible : Visibility.Collapsed;
-            LunarText.Visibility = _showLunar ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        /// <summary>
-        /// 窗口大小改变时调整模拟时钟大小
-        /// </summary>
-        private void ClockWidget_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (!_isDigital)
-            {
-                // 根据窗口大小调整模拟时钟
-                var size = Math.Min(ActualWidth, ActualHeight) - 40;
-                if (size > 0)
-                {
-                    AnalogClock.Width = size;
-                    AnalogClock.Height = size;
-                }
-            }
-        }
-
         #region 右键菜单事件
-
-        private void DigitalClock_Click(object sender, RoutedEventArgs e)
-        {
-            _isDigital = true;
-            _settings.Style = "Digital";
-            UpdateClockStyle();
-            UpdateClockMenuState();
-            SaveSettings();
-        }
-
-        private void AnalogClock_Click(object sender, RoutedEventArgs e)
-        {
-            _isDigital = false;
-            _settings.Style = "Analog";
-            UpdateClockStyle();
-            UpdateClockMenuState();
-            SaveSettings();
-        }
-
-        /// <summary>
-        /// 更新时钟样式菜单的勾选状态
-        /// </summary>
-        private void UpdateClockMenuState()
-        {
-            DigitalClockMenuItem.IsChecked = _isDigital;
-            AnalogClockMenuItem.IsChecked = !_isDigital;
-        }
 
         private void ToggleDate_Click(object sender, RoutedEventArgs e)
         {

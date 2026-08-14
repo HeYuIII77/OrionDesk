@@ -6,11 +6,6 @@ namespace OrionDesk.BLL.Models
     public class ClockSettings
     {
         /// <summary>
-        /// 时钟样式：Digital（数字）或 Analog（模拟）
-        /// </summary>
-        public string Style { get; set; } = "Digital";
-
-        /// <summary>
         /// 数字时钟格式（如 "HH:mm:ss"）
         /// </summary>
         public string TimeFormat { get; set; } = "HH:mm:ss";

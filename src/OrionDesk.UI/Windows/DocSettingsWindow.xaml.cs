@@ -9,10 +9,15 @@ namespace OrionDesk.UI.Windows
     public partial class DocSettingsWindow : Window
     {
         public string SelectedPath { get; private set; } = "";
+        private readonly string _browseDescription;
 
-        public DocSettingsWindow(string currentPath)
+        public DocSettingsWindow(string currentPath, string title = "文档中心设置", string pathLabel = "文档目录")
         {
             InitializeComponent();
+            Title = title;
+            TitleText.Text = title;
+            PathLabel.Text = pathLabel;
+            _browseDescription = $"选择{pathLabel}";
             PathBox.Text = currentPath ?? "";
         }
 
@@ -20,7 +25,7 @@ namespace OrionDesk.UI.Windows
         {
             var dialog = new System.Windows.Forms.FolderBrowserDialog
             {
-                Description = "选择文档目录",
+                Description = _browseDescription,
                 ShowNewFolderButton = true
             };
 
@@ -40,7 +45,7 @@ namespace OrionDesk.UI.Windows
 
             if (string.IsNullOrEmpty(path))
             {
-                System.Windows.MessageBox.Show("请选择文档目录。", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show($"请选择{PathLabel.Text}。", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 

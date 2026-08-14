@@ -30,9 +30,6 @@
         <!-- 右键菜单 -->
         <Border.ContextMenu>
             <ContextMenu>
-                <MenuItem x:Name="DigitalClockMenuItem" Header="数字时钟" Click="DigitalClock_Click" IsChecked="True"/>
-                <MenuItem x:Name="AnalogClockMenuItem" Header="模拟时钟" Click="AnalogClock_Click"/>
-                <Separator/>
                 <MenuItem Header="显示日期" Click="ToggleDate_Click" IsChecked="True"/>
                 <MenuItem Header="显示农历" Click="ToggleLunar_Click" IsChecked="True"/>
                 <MenuItem Header="显示天气" Click="ToggleWeather_Click" IsChecked="True"/>
@@ -64,48 +61,6 @@
                        Grid.Row="0"
                        Style="{StaticResource TimeTextStyle}"
                        Text="00:00:00"/>
-
-            <!-- 模拟时钟（默认隐藏） -->
-            <Canvas x:Name="AnalogClock"
-                    Grid.Row="0"
-                    Visibility="Collapsed"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Width="100" Height="100">
-                <!-- 时钟表盘 -->
-                <Ellipse Width="100" Height="100"
-                         Stroke="#33FFFFFF" StrokeThickness="1.5"
-                         Fill="Transparent"/>
-
-                <!-- 刻度线 -->
-                <Line X1="50" Y1="5" X2="50" Y2="12" Stroke="#55FFFFFF" StrokeThickness="1"/>
-                <Line X1="95" Y1="50" X2="88" Y2="50" Stroke="#55FFFFFF" StrokeThickness="1"/>
-                <Line X1="50" Y1="95" X2="50" Y2="88" Stroke="#55FFFFFF" StrokeThickness="1"/>
-                <Line X1="5" Y1="50" X2="12" Y2="50" Stroke="#55FFFFFF" StrokeThickness="1"/>
-
-                <!-- 时针 -->
-                <Line x:Name="HourHand"
-                      X1="50" Y1="50" X2="50" Y2="28"
-                      Stroke="White" StrokeThickness="2.5"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-
-                <!-- 分针 -->
-                <Line x:Name="MinuteHand"
-                      X1="50" Y1="50" X2="50" Y2="18"
-                      Stroke="White" StrokeThickness="1.5"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-
-                <!-- 秒针 -->
-                <Line x:Name="SecondHand"
-                      X1="50" Y1="50" X2="50" Y2="12"
-                      Stroke="#FFFF6B6B" StrokeThickness="1"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-
-                <!-- 中心点 -->
-                <Ellipse Width="5" Height="5"
-                         Canvas.Left="47.5" Canvas.Top="47.5"
-                         Fill="White"/>
-            </Canvas>
 
             <!-- 日期显示 -->
             <TextBlock x:Name="DateText"

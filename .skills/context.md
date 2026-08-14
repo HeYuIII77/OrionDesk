@@ -12,6 +12,16 @@
 
 ## Completed This Session
 
+### 拖放功能修复
+- ✅ BaseWidgetWindow 添加 Win32 WM_DROPFILES 支持（DragAcceptFiles + WndProc 钩子）
+- ✅ 新增 AcceptFileDrop 属性和 OnFileDrop 虚方法
+- ✅ LauncherWidget 切换到 Win32 拖放
+- ✅ DocWidget 切换到 Win32 拖放（保留 TreeViewItem 内部拖放）
+- ✅ FolderWidget 切换到 Win32 拖放
+- ✅ GitSyncWidget 切换到 Win32 拖放
+
+### 文档中心组件
+
 ### 文档中心组件
 - ✅ DocWidget 树形结构浏览（指定根目录、懒加载）
 - ✅ 搜索功能（文件名模糊搜索）

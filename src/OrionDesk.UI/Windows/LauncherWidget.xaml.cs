@@ -55,6 +55,7 @@ namespace OrionDesk.UI.Windows
         public LauncherWidget(WidgetConfig config, WidgetManager widgetManager)
             : base(config, widgetManager)
         {
+            AcceptFileDrop = true; // 启用 Win32 文件拖放（绕过 WorkerW z-order 限制）
             InitializeComponent();
 
             _settings = LoadSettings(config);
@@ -147,37 +148,19 @@ namespace OrionDesk.UI.Windows
         }
 
         /// <summary>
-        /// 拖拽进入事件
+        /// Win32 文件拖放下事件（绕过 WorkerW z-order 限制）
         /// </summary>
-        private void OnDragOver(object sender, System.Windows.DragEventArgs e)
+        protected override void OnFileDrop(string[] files)
         {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
-            {
-                e.Effects = System.Windows.DragDropEffects.Copy;
-                e.Handled = true;
-            }
-            else
-            {
-                e.Effects = System.Windows.DragDropEffects.None;
-            }
-        }
+            if (IsLocked) return;
 
-        /// <summary>
-        /// 拖拽放下事件
-        /// </summary>
-        private void OnDrop(object sender, System.Windows.DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+            foreach (var file in files)
             {
-                var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
-                foreach (var file in files)
+                // 只接受 .exe 和 .lnk 文件
+                if (file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
+                    file.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase))
                 {
-                    // 只接受 .exe 和 .lnk 文件
-                    if (file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
-                        file.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase))
-                    {
-                        AddApplication(file);
-                    }
+                    AddApplication(file);
                 }
             }
         }
@@ -668,9 +651,6 @@ namespace OrionDesk.UI.Windows
             LockButton.ToolTip = IsLocked ? "解锁" : "锁定";
             LockMenuItem.IsChecked = IsLocked;
             LockMenuItem.Header = IsLocked ? "解锁" : "锁定";
-
-            // 锁定时禁用拖拽放下
-            AllowDrop = !IsLocked;
         }
 
         #region 右键菜单事件

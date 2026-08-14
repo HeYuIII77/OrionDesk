@@ -19,6 +19,7 @@ namespace OrionDesk.UI.Windows
         public FolderWidget(WidgetConfig config, WidgetManager widgetManager)
             : base(config, widgetManager)
         {
+            AcceptFileDrop = true; // 启用 Win32 文件拖放（绕过 WorkerW z-order 限制）
             InitializeComponent();
 
             // 直接初始化
@@ -194,32 +195,37 @@ namespace OrionDesk.UI.Windows
         }
 
         /// <summary>
-        /// 拖入文件夹
+        /// Win32 文件拖放下事件（绕过 WorkerW z-order 限制）
         /// </summary>
-        private void OnDragOver(object sender, System.Windows.DragEventArgs e)
+        protected override void OnFileDrop(string[] files)
         {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
-                e.Effects = System.Windows.DragDropEffects.Copy;
-            else
-                e.Effects = System.Windows.DragDropEffects.None;
-            e.Handled = true;
-        }
-
-        private void OnDrop(object sender, System.Windows.DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+            if (files.Length > 0 && Directory.Exists(files[0]))
             {
-                var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
-                if (files.Length > 0 && Directory.Exists(files[0]))
-                {
-                    _folderPath = files[0];
-                    LoadTree();
-                    SaveFolder();
-                }
+                _folderPath = files[0];
+                LoadTree();
+                SaveFolder();
             }
         }
 
         #region 右键菜单
+
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new DocSettingsWindow(_folderPath, "文件夹映射设置", "文件夹路径");
+            dialog.Owner = Window.GetWindow(this);
+            if (dialog.ShowDialog() == true)
+            {
+                _folderPath = dialog.SelectedPath;
+                LoadTree();
+                SaveFolder();
+            }
+        }
+
+        private void Refresh_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_folderPath) && Directory.Exists(_folderPath))
+                LoadTree();
+        }
 
         private void Close_Click(object sender, RoutedEventArgs e) => RequestClose();
 

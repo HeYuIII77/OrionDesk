@@ -3,10 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:OrionDesk.UI.Windows"
         Title="文档中心"
-        Background="Transparent"
-        AllowDrop="True"
-        Drop="OnDrop"
-        DragOver="OnDragOver">
+        Background="Transparent">
     <Window.Resources>
         <!-- 覆盖系统高亮色 -->
         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF2A2A2A"/>
