@@ -113,6 +113,25 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- 搜索框样式 -->
+        <Style x:Key="SearchBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Border Style="{StaticResource GlassBackground}">
@@ -131,11 +150,12 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- 标题栏 -->
-            <Grid Grid.Row="0" Margin="0,0,0,6">
+            <Grid Grid.Row="0" Margin="0,0,0,4">
                 <Button x:Name="LockButton" Content="🔓"
                         HorizontalAlignment="Left" VerticalAlignment="Center"
                         Style="{StaticResource LockButtonStyle}"
@@ -150,8 +170,21 @@
                         Click="Refresh_Click" ToolTip="刷新"/>
             </Grid>
 
+            <!-- 搜索框 -->
+            <Grid Grid.Row="1" Margin="0,0,0,4">
+                <TextBox x:Name="SearchBox"
+                         Style="{StaticResource SearchBoxStyle}"
+                         TextChanged="SearchBox_TextChanged"
+                         GotFocus="SearchBox_GotFocus"
+                         LostFocus="SearchBox_LostFocus"/>
+                <TextBlock x:Name="SearchPlaceholder" Text="🔍 搜索文件..."
+                           Foreground="#55FFFFFF" FontSize="12" FontFamily="Segoe UI"
+                           IsHitTestVisible="False"
+                           VerticalAlignment="Center" Margin="9,0,0,0"/>
+            </Grid>
+
             <!-- 树形文件列表（外层 ScrollViewer 控制滚动） -->
-            <ScrollViewer Grid.Row="1" Style="{StaticResource DarkScrollViewerStyle}"
+            <ScrollViewer Grid.Row="2" Style="{StaticResource DarkScrollViewerStyle}"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Auto">
                 <TreeView x:Name="FolderTree"

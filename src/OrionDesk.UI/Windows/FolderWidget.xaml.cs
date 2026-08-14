@@ -15,6 +15,7 @@ namespace OrionDesk.UI.Windows
     public partial class FolderWidget : BaseWidgetWindow
     {
         private string _folderPath = "";
+        private bool _isSearching;
 
         public FolderWidget(WidgetConfig config, WidgetManager widgetManager)
             : base(config, widgetManager)
@@ -207,6 +208,92 @@ namespace OrionDesk.UI.Windows
             }
         }
 
+        #region 搜索
+
+        private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            var query = SearchBox.Text.Trim();
+            SearchPlaceholder.Visibility = string.IsNullOrEmpty(query)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+            if (string.IsNullOrEmpty(query))
+            {
+                _isSearching = false;
+                LoadTree();
+                return;
+            }
+
+            _isSearching = true;
+            FolderTree.Items.Clear();
+
+            if (string.IsNullOrEmpty(_folderPath) || !Directory.Exists(_folderPath))
+                return;
+
+            try
+            {
+                SearchDirectory(new DirectoryInfo(_folderPath), query, "");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"搜索失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 递归搜索目录，匹配文件名
+        /// </summary>
+        private void SearchDirectory(DirectoryInfo dir, string query, string relativePath)
+        {
+            try
+            {
+                // 搜索文件
+                foreach (var file in dir.GetFiles())
+                {
+                    if (file.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var display = string.IsNullOrEmpty(relativePath)
+                            ? $"📄 {file.Name}"
+                            : $"📄 {file.Name}    ({relativePath})";
+                        var node = new TreeViewItem
+                        {
+                            Header = display,
+                            Tag = file.FullName,
+                            Foreground = System.Windows.Media.Brushes.White
+                        };
+                        FolderTree.Items.Add(node);
+                    }
+                }
+
+                // 递归子目录
+                foreach (var subDir in dir.GetDirectories())
+                {
+                    try
+                    {
+                        var subRelative = string.IsNullOrEmpty(relativePath)
+                            ? subDir.Name
+                            : $"{relativePath}/{subDir.Name}";
+                        SearchDirectory(subDir, query, subRelative);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
+        private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            SearchPlaceholder.Visibility = Visibility.Collapsed;
+        }
+
+        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(SearchBox.Text))
+                SearchPlaceholder.Visibility = Visibility.Visible;
+        }
+
+        #endregion
+
         #region 右键菜单
 
         private void Settings_Click(object sender, RoutedEventArgs e)
@@ -223,6 +310,7 @@ namespace OrionDesk.UI.Windows
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
+            if (_isSearching) return; // 搜索中不响应刷新
             if (!string.IsNullOrEmpty(_folderPath) && Directory.Exists(_folderPath))
                 LoadTree();
         }
