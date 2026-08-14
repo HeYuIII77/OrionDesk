@@ -52,6 +52,12 @@ namespace OrionDesk.UI.Windows
         [DllImport("user32.dll")]
         private static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
 
+        [DllImport("user32.dll")]
+        private static extern bool IsWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern uint RegisterWindowMessage(string lpString);
+
         [DllImport("shell32.dll")]
         private static extern void DragAcceptFiles(IntPtr hWnd, bool fAccept);
 
@@ -83,6 +89,11 @@ namespace OrionDesk.UI.Windows
 
         private const uint WM_SPAWN_WORKERW = 0x052C;
         private const uint WM_DROPFILES = 0x0233;
+
+        // Explorer 重启检测
+        private static uint _taskbarCreatedMsg;
+        private static readonly List<Action> _explorerRestartCallbacks = new();
+        private static bool _hookRegistered = false;
 
         #endregion
 
@@ -148,6 +159,9 @@ namespace OrionDesk.UI.Windows
         // 防抖定时器
         private DispatcherTimer? _saveTimer;
 
+        // WorkerW 有效性检查定时器
+        private DispatcherTimer? _workerWCheckTimer;
+
         // 调整大小吸附防重入
         private bool _isResizing = false;
 
@@ -178,6 +192,13 @@ namespace OrionDesk.UI.Windows
             _config = config;
             _widgetManager = widgetManager;
 
+            // 注册 Explorer 重启检测（只需注册一次）
+            if (!_hookRegistered)
+            {
+                _taskbarCreatedMsg = RegisterWindowMessage("TaskbarCreated");
+                _hookRegistered = true;
+            }
+
             // 设置窗口属性
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -186,15 +207,8 @@ namespace OrionDesk.UI.Windows
             ResizeMode = ResizeMode.CanResizeWithGrip;
             Topmost = false; // 我们自己控制层级
 
-            // 添加投影效果（增加层次感）
-            Effect = new System.Windows.Media.Effects.DropShadowEffect
-            {
-                Color = System.Windows.Media.Colors.Black,
-                Direction = 270,
-                ShadowDepth = 3,
-                Opacity = 0.25,
-                BlurRadius = 10
-            };
+            // 不使用 DropShadowEffect（会导致窗口视觉偏移）
+            // 阴影由各组件 XAML 中的 Border 自行处理
 
             // 初始位置和大小
             Left = config.Position.X;
@@ -227,6 +241,22 @@ namespace OrionDesk.UI.Windows
                 _saveTimer.Stop();
                 SavePosition();
             };
+
+            // WorkerW 有效性检查定时器（每 30 秒检查一次）
+            _workerWCheckTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(30)
+            };
+            _workerWCheckTimer.Tick += (s, e) =>
+            {
+                if (_workerWHandle != IntPtr.Zero && !IsWindow(_workerWHandle))
+                {
+                    System.Diagnostics.Debug.WriteLine("[WorkerW 检查] 句柄已失效，重新设置桌面层级");
+                    _workerWHandle = IntPtr.Zero;
+                    SetDesktopLevel();
+                }
+            };
+            _workerWCheckTimer.Start();
         }
 
         #endregion
@@ -240,13 +270,15 @@ namespace OrionDesk.UI.Windows
                 // 隐藏任务栏图标
                 HideFromTaskbar();
 
-                // 注册 Win32 文件拖放（WM_DROPFILES，不受窗口 z-order 限制）
+                // 注册消息钩子（文件拖放 + Explorer 重启检测）
+                var hwnd = new WindowInteropHelper(this).Handle;
+                var source = HwndSource.FromHwnd(hwnd);
+                source?.AddHook(WndProc);
+
+                // 注册 Win32 文件拖放
                 if (AcceptFileDrop)
                 {
-                    var hwnd = new WindowInteropHelper(this).Handle;
                     DragAcceptFiles(hwnd, true);
-                    var source = HwndSource.FromHwnd(hwnd);
-                    source?.AddHook(WndProc);
                 }
 
                 // 延迟设置桌面层级，确保窗口已完全初始化
@@ -269,10 +301,32 @@ namespace OrionDesk.UI.Windows
         }
 
         /// <summary>
-        /// Win32 消息钩子，处理 WM_DROPFILES
+        /// Win32 消息钩子，处理 WM_DROPFILES 和 Explorer 重启
         /// </summary>
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            // Explorer 重启检测
+            if (_taskbarCreatedMsg != 0 && (uint)msg == _taskbarCreatedMsg)
+            {
+                System.Diagnostics.Debug.WriteLine("[Explorer 重启] 检测到 Explorer 重启，刷新桌面层级");
+                // WorkerW 句柄已失效，重置后重新设置桌面层级
+                _workerWHandle = IntPtr.Zero;
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        SetDesktopLevel();
+                        Show(); // 确保窗口可见
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Explorer 重启] 刷新失败: {ex.Message}");
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+                return IntPtr.Zero;
+            }
+
+            // 文件拖放处理
             if ((uint)msg == WM_DROPFILES && AcceptFileDrop)
             {
                 var hDrop = wParam;
@@ -317,7 +371,14 @@ namespace OrionDesk.UI.Windows
         {
             try
             {
-                // 找到桌面WorkerW窗口（仅首次或句柄失效时查找）
+                // 验证 WorkerW 句柄是否仍然有效（Explorer 重启后会失效）
+                if (_workerWHandle != IntPtr.Zero && !IsWindow(_workerWHandle))
+                {
+                    System.Diagnostics.Debug.WriteLine("[桌面层级] WorkerW 句柄已失效，重新查找");
+                    _workerWHandle = IntPtr.Zero;
+                }
+
+                // 找到桌面WorkerW窗口（首次或句柄失效时查找）
                 if (_workerWHandle == IntPtr.Zero)
                 {
                     FindDesktopWindows();
@@ -765,6 +826,8 @@ namespace OrionDesk.UI.Windows
         {
             _saveTimer?.Stop();
             _saveTimer = null;
+            _workerWCheckTimer?.Stop();
+            _workerWCheckTimer = null;
             base.OnClosed(e);
         }
 

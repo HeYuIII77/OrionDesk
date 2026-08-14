@@ -587,6 +587,29 @@ commit ba22b13 将拖放方式从直接注册改为 DropOverlayWindow 覆盖窗�
 ### Modified
 - BaseWidgetWindow.cs — 恢复 DragAcceptFiles/WndProc 直接注册、移除 _dropOverlay 字段和相关代码
 
+### 组件消失问题修复
+
+### Completed
+- WorkerW 句柄有效性检查（IsWindow API 验证）
+- Explorer 重启检测（RegisterWindowMessage "TaskbarCreated"）
+- 定时检查机制（每 30 秒验证 WorkerW 句柄）
+- Explorer 重启后自动刷新桌面层级
+
+### Root Cause
+Windows Explorer 重启后 WorkerW 窗口被重建，但代码缓存的旧句柄未失效（非 IntPtr.Zero），导致 SetParent 失败，组件窗口不可见。
+
+### Modified
+- BaseWidgetWindow.cs — 添加 IsWindow/RegisterWindowMessage 导入、WorkerW 有效性检查、TaskbarCreated 消息处理、_workerWCheckTimer 定时器
+
+### 组件位置偏移修复
+
+### Completed
+- 移除 BaseWidgetWindow 窗口级别的 DropShadowEffect
+- DropShadowEffect 的 BlurRadius=10 会导致窗口视觉边界扩展，在 AllowsTransparency=true 窗口上造成右下偏移
+
+### Modified
+- BaseWidgetWindow.cs — 移除 DropShadowEffect
+
 ### 时钟组件简化
 - 移除模拟时钟（XAML Canvas、6个code-behind方法、ClockSettings.Style）
 

@@ -8,6 +8,26 @@
 **Root Cause**: commit ba22b13 将 BaseWidgetWindow 的拖放方式从直接注册 WM_DROPFILES 改为 DropOverlayWindow 覆盖窗口代理。但 DropOverlayWindow 返回 HTNOWHERE 导致系统不路由 WM_DROPFILES 消息。
 **修复**: 恢复原始实现，在 OnWindowLoaded 中直接注册 WM_DROPFILES（在 SetDesktopLevel 之前），WndProc 处理消息并调用 OnFileDrop。
 
+## Bug: 运行一段时间后组件全部消失（已修复）
+
+**Status**: Resolved — WorkerW 句柄有效性检查 + Explorer 重启检测
+**Reproduction**: 运行 OrionDesk 一段时间后，桌面组件全部消失（存在但不显示），退出重进也不恢复
+**Impact**: 组件完全不可用
+**Root Cause**: Windows Explorer 重启后 WorkerW 窗口被重建，但代码缓存的旧句柄未失效（非 IntPtr.Zero），导致 SetParent 失败
+**修复**:
+1. 使用 IsWindow API 验证 WorkerW 句柄有效性
+2. 注册 TaskbarCreated 消息检测 Explorer 重启
+3. 每 30 秒定时检查 WorkerW 句柄
+4. Explorer 重启后自动刷新桌面层级
+
+## Bug: 组件位置向右下偏移（已修复）
+
+**Status**: Resolved — 移除窗口级别 DropShadowEffect
+**Reproduction**: 打开 OrionDesk 后，所有组件位置比预期偏右下
+**Impact**: 组件位置不准确
+**Root Cause**: BaseWidgetWindow 的 DropShadowEffect（BlurRadius=10）在 AllowsTransparency=true 窗口上导致视觉边界扩展，造成位置偏移
+**修复**: 移除窗口级别的 DropShadowEffect
+
 ## Bug: 内存监控显示 0%
 
 **Status**: Resolved — 使用 Win32 API GlobalMemoryStatusEx 获取系统真实内存
