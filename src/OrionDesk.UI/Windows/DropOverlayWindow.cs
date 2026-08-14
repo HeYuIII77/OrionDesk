@@ -43,6 +43,8 @@ namespace OrionDesk.UI.Windows
         private const uint SWP_SHOWWINDOW = 0x0040;
         private const uint SWP_HIDEWINDOW = 0x0080;
         private const uint WM_DROPFILES = 0x0233;
+        private const int WM_NCHITTEST = 0x0084;
+        private const int HTNOWHERE = 0;
 
         #endregion
 
@@ -127,9 +129,9 @@ namespace OrionDesk.UI.Windows
         {
             var hwnd = new WindowInteropHelper(_overlay).Handle;
 
-            // 设置窗口样式：工具窗口 + 穿透点击 + 不激活
+            // 设置窗口样式：工具窗口 + 不激活（不用 WS_EX_TRANSPARENT，否则拖放命中测试也会穿透）
             var exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE);
+            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
 
             // 注册文件拖放
             DragAcceptFiles(hwnd, true);
@@ -162,6 +164,13 @@ namespace OrionDesk.UI.Windows
                 }
 
                 handled = true;
+            }
+            else if (msg == WM_NCHITTEST)
+            {
+                // 返回 HTNOWHERE 使鼠标事件穿透到下层窗口
+                // WM_DROPFILES 不依赖命中测试，仍然能被接收
+                handled = true;
+                return new IntPtr(HTNOWHERE);
             }
 
             return IntPtr.Zero;

@@ -52,6 +52,15 @@ namespace OrionDesk.UI.Windows
         [DllImport("user32.dll")]
         private static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
 
+        [DllImport("shell32.dll")]
+        private static extern void DragAcceptFiles(IntPtr hWnd, bool fAccept);
+
+        [DllImport("shell32.dll")]
+        private static extern uint DragQueryFile(IntPtr hDrop, uint iFile, System.Text.StringBuilder? lpszFile, uint cch);
+
+        [DllImport("shell32.dll")]
+        private static extern void DragFinish(IntPtr hDrop);
+
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
@@ -73,6 +82,7 @@ namespace OrionDesk.UI.Windows
         private static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
 
         private const uint WM_SPAWN_WORKERW = 0x052C;
+        private const uint WM_DROPFILES = 0x0233;
 
         #endregion
 
@@ -147,10 +157,10 @@ namespace OrionDesk.UI.Windows
         // 单个组件主动关闭标志
         private bool _requestingClose = false;
 
-        // 文件拖放支持（透明覆盖窗口代理）
+        // Win32 文件拖放（不受窗口 z-order 限制）
         /// <summary>
-        /// 子类设为 true 以启用文件拖放支持。
-        /// 通过透明覆盖窗口接收 WM_DROPFILES 并转发，解决 WorkerW 子窗口无法接收拖放的问题。
+        /// 子类设为 true 以启用 Win32 WM_DROPFILES 拖放支持。
+        /// 解决 WorkerW 子窗口无法接收 OLE DragDrop 的问题。
         /// </summary>
         protected bool AcceptFileDrop { get; set; } = false;
 
@@ -158,8 +168,6 @@ namespace OrionDesk.UI.Windows
         /// 子类重写此方法接收文件拖放。参数为拖入的文件路径列表。
         /// </summary>
         protected virtual void OnFileDrop(string[] files) { }
-
-        private DropOverlayWindow? _dropOverlay;
 
         #endregion
 
@@ -232,20 +240,21 @@ namespace OrionDesk.UI.Windows
                 // 隐藏任务栏图标
                 HideFromTaskbar();
 
+                // 注册 Win32 文件拖放（WM_DROPFILES，不受窗口 z-order 限制）
+                if (AcceptFileDrop)
+                {
+                    var hwnd = new WindowInteropHelper(this).Handle;
+                    DragAcceptFiles(hwnd, true);
+                    var source = HwndSource.FromHwnd(hwnd);
+                    source?.AddHook(WndProc);
+                }
+
                 // 延迟设置桌面层级，确保窗口已完全初始化
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     try
                     {
                         SetDesktopLevel();
-
-                        // 创建拖放覆盖窗口（在 SetDesktopLevel 之后，窗口已挂到 WorkerW）
-                        if (AcceptFileDrop)
-                        {
-                            _dropOverlay = new DropOverlayWindow(this);
-                            _dropOverlay.FilesDropped += files => OnFileDrop(files);
-                            _dropOverlay.Show();
-                        }
                     }
                     catch (Exception ex)
                     {
@@ -257,6 +266,37 @@ namespace OrionDesk.UI.Windows
             {
                 System.Diagnostics.Debug.WriteLine($"[桌面层级] 初始化失败: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Win32 消息钩子，处理 WM_DROPFILES
+        /// </summary>
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if ((uint)msg == WM_DROPFILES && AcceptFileDrop)
+            {
+                var hDrop = wParam;
+                var fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, null, 0);
+                var files = new List<string>();
+
+                for (uint i = 0; i < fileCount; i++)
+                {
+                    var sb = new System.Text.StringBuilder(260);
+                    DragQueryFile(hDrop, i, sb, (uint)sb.Capacity);
+                    files.Add(sb.ToString());
+                }
+
+                DragFinish(hDrop);
+
+                if (files.Count > 0)
+                {
+                    OnFileDrop(files.ToArray());
+                }
+
+                handled = true;
+            }
+
+            return IntPtr.Zero;
         }
 
 
@@ -619,11 +659,9 @@ namespace OrionDesk.UI.Windows
                 Show();
                 // 重新挂到 WorkerW 并放到最底层
                 SetDesktopLevel();
-                _dropOverlay?.Show();
             }
             else
             {
-                _dropOverlay?.Hide();
                 Hide();
             }
         }
@@ -725,8 +763,6 @@ namespace OrionDesk.UI.Windows
 
         protected override void OnClosed(EventArgs e)
         {
-            _dropOverlay?.Dispose();
-            _dropOverlay = null;
             _saveTimer?.Stop();
             _saveTimer = null;
             base.OnClosed(e);

@@ -1,12 +1,12 @@
 # Bug Tracker
 
-## Bug: 组件窗口无法从外部拖入文件
+## Bug: 组件窗口无法从外部拖入文件（已修复）
 
-**Status**: Resolved — 使用 Win32 WM_DROPFILES 替代 WPF OLE DragDrop
-**Reproduction**: 从资源管理器或桌面拖拽文件到启动器/文档中心/文件夹映射/Git同步监控组件，拖放无效
-**Impact**: 所有组件的文件拖放功能失效
-**Root Cause**: BaseWidgetWindow 通过 SetParent 将窗口挂到 WorkerW（桌面底层窗口），窗口处于所有应用程序后面。WPF 的 OLE DragDrop 机制无法将拖拽事件路由到不在前台窗口层级的目标窗口。
-**Resolution**: 在 BaseWidgetWindow 中实现 Win32 WM_DROPFILES 消息处理，该机制不受窗口 z-order 限制。4 个组件（LauncherWidget、DocWidget、FolderWidget、GitSyncWidget）从 WPF DragDrop 切换到 Win32 WM_DROPFILES。DocWidget 内部 TreeViewItem 拖放保留 WPF DragDrop（通过 DocTree.AllowDrop = true）。
+**Status**: Resolved — 恢复 WM_DROPFILES 直接注册方式
+**Reproduction**: 从资源管理器或桌面拖拽文件到启动器/文件夹映射/Git同步监控组件，拖放无效
+**Impact**: 启动器无法通过拖放添加应用
+**Root Cause**: commit ba22b13 将 BaseWidgetWindow 的拖放方式从直接注册 WM_DROPFILES 改为 DropOverlayWindow 覆盖窗口代理。但 DropOverlayWindow 返回 HTNOWHERE 导致系统不路由 WM_DROPFILES 消息。
+**修复**: 恢复原始实现，在 OnWindowLoaded 中直接注册 WM_DROPFILES（在 SetDesktopLevel 之前），WndProc 处理消息并调用 OnFileDrop。
 
 ## Bug: 内存监控显示 0%
 

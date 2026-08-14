@@ -551,3 +551,46 @@ BaseWidgetWindow 通过 SetParent 将窗口挂到 WorkerW（桌面底层窗口�
 - FolderWidget.xaml.cs - 构造函数设 AcceptFileDrop=true、OnDragOver/OnDrop→OnFileDrop
 - GitSyncWidget.xaml - 移除 AllowDrop/Drop/DragOver
 - GitSyncWidget.xaml.cs - 构造函数设 AcceptFileDrop=true、OnDragOver/OnDrop→OnFileDrop
+
+## 2026-08-14
+
+### 文档中心移除
+
+### Completed
+- 删除 DocWidget.xaml / DocWidget.xaml.cs
+- MainWindow.xaml.cs 移除 3 处引用（托盘菜单、默认尺寸、工厂分支）
+- 保留 DocSettingsWindow（FolderWidget 复用）
+
+### 文件夹映射搜索功能
+
+### Completed
+- FolderWidget.xaml 添加搜索框（TextBox + SearchBoxStyle + placeholder），Grid 2行→3行
+- FolderWidget.xaml.cs 添加 _isSearching、SearchBox_TextChanged、SearchDirectory（递归匹配文件名+相对路径）、SearchBox_GotFocus/LostFocus
+- 搜索中禁用刷新，双击搜索结果直接打开
+
+### 启动器右键设置
+- FolderWidget 右键菜单添加"设置"入口，复用 DocSettingsWindow（传入自定义标题和标签）
+
+### 时钟组件简化
+- 移除模拟时钟（XAML Canvas、6个code-behind方法、ClockSettings.Style）
+
+### 拖放功能修复
+
+### Completed
+- 恢复 WM_DROPFILES 直接注册方式（在 SetDesktopLevel 之前注册）
+- 移除 DropOverlayWindow 集成（该方案返回 HTNOWHERE 导致系统不路由 WM_DROPFILES）
+- BaseWidgetWindow 恢复原始 WndProc 处理 WM_DROPFILES 消息
+
+### Root Cause
+commit ba22b13 将拖放方式从直接注册改为 DropOverlayWindow 覆盖窗口代理，但 DropOverlayWindow 返回 HTNOWHERE 使系统不路由拖放消息。
+
+### Modified
+- BaseWidgetWindow.cs — 恢复 DragAcceptFiles/WndProc 直接注册、移除 _dropOverlay 字段和相关代码
+
+### 时钟组件简化
+- 移除模拟时钟（XAML Canvas、6个code-behind方法、ClockSettings.Style）
+
+### Modified
+- ClockWidget.xaml — 移除模拟时钟 Canvas
+- ClockWidget.xaml.cs — 移除模拟时钟相关方法
+- ClockSettings.cs — 移除 Style 属性
