@@ -55,6 +55,9 @@ namespace OrionDesk.UI.Windows
         [DllImport("user32.dll")]
         private static extern bool IsWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetParent(IntPtr hWnd);
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern uint RegisterWindowMessage(string lpString);
 
@@ -249,10 +252,38 @@ namespace OrionDesk.UI.Windows
             };
             _workerWCheckTimer.Tick += (s, e) =>
             {
-                if (_workerWHandle != IntPtr.Zero && !IsWindow(_workerWHandle))
+                bool needRestore = false;
+
+                if (_workerWHandle == IntPtr.Zero)
                 {
+                    // 首次，需要查找 WorkerW
+                    needRestore = true;
+                }
+                else if (!IsWindow(_workerWHandle))
+                {
+                    // WorkerW 句柄已失效（Explorer 重建等）
                     System.Diagnostics.Debug.WriteLine("[WorkerW 检查] 句柄已失效，重新设置桌面层级");
                     _workerWHandle = IntPtr.Zero;
+                    needRestore = true;
+                }
+                else
+                {
+                    // 句柄有效，但检查父子关系是否还在
+                    var hwnd = new WindowInteropHelper(this).Handle;
+                    if (hwnd != IntPtr.Zero)
+                    {
+                        var parent = GetParent(hwnd);
+                        if (parent != _workerWHandle)
+                        {
+                            // 父子关系断开（显示器关闭后 Explorer 重建 WorkerW 等场景）
+                            System.Diagnostics.Debug.WriteLine($"[WorkerW 检查] 父子关系断开 (parent={parent}, expected={_workerWHandle})，重新设置桌面层级");
+                            needRestore = true;
+                        }
+                    }
+                }
+
+                if (needRestore)
+                {
                     SetDesktopLevel();
                 }
             };

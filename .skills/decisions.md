@@ -329,3 +329,29 @@
 **Impact**: 添加 _allWidgetsLock 对象，Register/Unregister 加锁，迭代用 ToArray 快照
 
 **Status**: Active
+
+## 2026-08-14
+
+### Decision: 恢复 WM_DROPFILES 直接注册方式
+
+**Reason**: DropOverlayWindow 覆盖窗口方案（返回 HTNOWHERE）导致系统不路由 WM_DROPFILES 消息，拖放功能失效
+
+**Impact**: BaseWidgetWindow 恢复原始 WndProc 处理，在 OnWindowLoaded 中直接注册 WM_DROPFILES（在 SetDesktopLevel 之前）
+
+**Status**: Active
+
+### Decision: WorkerW 句柄有效性检查 + Explorer 重启检测
+
+**Reason**: Windows Explorer 重启后 WorkerW 窗口被重建，缓存的旧句柄未失效（非 IntPtr.Zero），导致 SetParent 失败，组件不可见
+
+**Impact**: 添加 IsWindow API 验证 + TaskbarCreated 消息检测 + 30 秒定时检查，三重保障 WorkerW 句柄有效性
+
+**Status**: Active
+
+### Decision: 移除窗口级别 DropShadowEffect
+
+**Reason**: DropShadowEffect 的 BlurRadius=10 在 AllowsTransparency=true 窗口上导致视觉边界扩展，造成组件位置向右下偏移
+
+**Impact**: 移除 BaseWidgetWindow 的 Effect 属性设置，组件不再有投影效果
+
+**Status**: Active
