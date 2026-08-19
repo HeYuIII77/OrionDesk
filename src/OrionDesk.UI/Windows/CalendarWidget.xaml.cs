@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Threading;
 using OrionDesk.BLL.Models;
 using OrionDesk.BLL.Services;
 
@@ -32,6 +33,7 @@ namespace OrionDesk.UI.Windows
         private readonly Button[,] _dayButtons = new Button[6, 7];
         private readonly TextBlock[,] _dayTexts = new TextBlock[6, 7];
         private readonly StackPanel[,] _dayDots = new StackPanel[6, 7];
+        private DispatcherTimer? _countdownTimer;
 
         #endregion
 
@@ -46,6 +48,14 @@ namespace OrionDesk.UI.Windows
             LoadLockState();
             RenderCalendar();
             RenderCountdowns();
+
+            // 每分钟刷新倒计时
+            _countdownTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMinutes(1)
+            };
+            _countdownTimer.Tick += (s, e) => RenderCountdowns();
+            _countdownTimer.Start();
         }
 
         #endregion
@@ -483,6 +493,13 @@ namespace OrionDesk.UI.Windows
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => RequestClose();
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _countdownTimer?.Stop();
+            _countdownTimer = null;
+            base.OnClosed(e);
+        }
 
         #endregion
     }
