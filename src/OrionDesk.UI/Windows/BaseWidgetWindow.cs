@@ -427,16 +427,15 @@ namespace OrionDesk.UI.Windows
                     // 强制刷新 WPF 位置（防止 DPI 变化导致偏移）
                     Left = curLeft;
                     Top = curTop;
-                    // 临时 Topmost 恢复为正常
                     Topmost = false;
                     System.Diagnostics.Debug.WriteLine($"[桌面层级] 已设置为WorkerW子窗口 (BOTTOM) pos=({curLeft},{curTop})");
                 }
                 else
                 {
-                    // WorkerW未找到（显示器关闭/Explorer 挂起），临时用 Topmost 保持可见
+                    // WorkerW未找到（显示器关闭/Explorer 挂起），保持默认层级
                     // 等下一次定时器检查时会重新尝试挂载到 WorkerW
-                    Topmost = true;
-                    System.Diagnostics.Debug.WriteLine("[桌面层级] WorkerW未找到，临时使用 Topmost 保持可见");
+                    Topmost = false;
+                    System.Diagnostics.Debug.WriteLine("[桌面层级] WorkerW未找到，保持默认层级，等待重试");
                 }
             }
             catch (Exception ex)
