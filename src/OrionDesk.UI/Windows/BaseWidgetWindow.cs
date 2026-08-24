@@ -58,6 +58,9 @@ namespace OrionDesk.UI.Windows
         [DllImport("user32.dll")]
         private static extern IntPtr GetParent(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern bool IsWindowVisible(IntPtr hWnd);
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern uint RegisterWindowMessage(string lpString);
 
@@ -253,37 +256,47 @@ namespace OrionDesk.UI.Windows
             _workerWCheckTimer.Tick += (s, e) =>
             {
                 bool needRestore = false;
+                var hwnd = new WindowInteropHelper(this).Handle;
 
-                if (_workerWHandle == IntPtr.Zero)
+                // 检查1：WPF 层面是否可见（Visibility != Hidden 且 Opacity > 0）
+                if (Visibility != Visibility.Visible || Opacity <= 0)
                 {
-                    // 首次，需要查找 WorkerW
+                    System.Diagnostics.Debug.WriteLine($"[WorkerW 检查] WPF 窗口不可见 (Vis={Visibility}, Opacity={Opacity})，尝试恢复");
+                    needRestore = true;
+                }
+                // 检查2：Win32 层面是否可见
+                else if (hwnd != IntPtr.Zero && !IsWindowVisible(hwnd))
+                {
+                    System.Diagnostics.Debug.WriteLine("[WorkerW 检查] Win32 窗口不可见，尝试恢复");
+                    needRestore = true;
+                }
+                // 检查3：WorkerW 句柄是否有效
+                else if (_workerWHandle == IntPtr.Zero)
+                {
                     needRestore = true;
                 }
                 else if (!IsWindow(_workerWHandle))
                 {
-                    // WorkerW 句柄已失效（Explorer 重建等）
                     System.Diagnostics.Debug.WriteLine("[WorkerW 检查] 句柄已失效，重新设置桌面层级");
                     _workerWHandle = IntPtr.Zero;
                     needRestore = true;
                 }
-                else
+                // 检查4：父子关系是否还在
+                else if (hwnd != IntPtr.Zero)
                 {
-                    // 句柄有效，但检查父子关系是否还在
-                    var hwnd = new WindowInteropHelper(this).Handle;
-                    if (hwnd != IntPtr.Zero)
+                    var parent = GetParent(hwnd);
+                    if (parent != _workerWHandle)
                     {
-                        var parent = GetParent(hwnd);
-                        if (parent != _workerWHandle)
-                        {
-                            // 父子关系断开（显示器关闭后 Explorer 重建 WorkerW 等场景）
-                            System.Diagnostics.Debug.WriteLine($"[WorkerW 检查] 父子关系断开 (parent={parent}, expected={_workerWHandle})，重新设置桌面层级");
-                            needRestore = true;
-                        }
+                        System.Diagnostics.Debug.WriteLine($"[WorkerW 检查] 父子关系断开 (parent={parent}, expected={_workerWHandle})，重新设置桌面层级");
+                        needRestore = true;
                     }
                 }
 
                 if (needRestore)
                 {
+                    // 确保 WPF 层面可见
+                    Visibility = Visibility.Visible;
+                    if (Opacity <= 0) Opacity = _normalOpacity;
                     SetDesktopLevel();
                 }
             };
@@ -418,17 +431,28 @@ namespace OrionDesk.UI.Windows
                 if (_workerWHandle != IntPtr.Zero)
                 {
                     var hwnd = new WindowInteropHelper(this).Handle;
-                    // 记录当前位置，防止 SetParent 导致位置漂移
-                    var curLeft = Left;
-                    var curTop = Top;
-                    // 将窗口设置为WorkerW的子窗口，固定在最底层
+                    // 先记录当前 WPF 逻辑坐标（屏幕坐标，DIP）
+                    var targetLeft = Left;
+                    var targetTop = Top;
+                    // SetParent 会导致 Windows 自动调整位置
                     SetParent(hwnd, _workerWHandle);
-                    SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-                    // 强制刷新 WPF 位置（防止 DPI 变化导致偏移）
-                    Left = curLeft;
-                    Top = curTop;
                     Topmost = false;
-                    System.Diagnostics.Debug.WriteLine($"[桌面层级] 已设置为WorkerW子窗口 (BOTTOM) pos=({curLeft},{curTop})");
+                    // 用 Win32 直接设定精确的屏幕像素坐标，防止 SetParent 导致偏移
+                    var source = PresentationSource.FromVisual(this);
+                    double dpiX = 1.0, dpiY = 1.0;
+                    if (source?.CompositionTarget != null)
+                    {
+                        dpiX = source.CompositionTarget.TransformToDevice.M11;
+                        dpiY = source.CompositionTarget.TransformToDevice.M22;
+                    }
+                    int pixelX = (int)(targetLeft * dpiX);
+                    int pixelY = (int)(targetTop * dpiY);
+                    SetWindowPos(hwnd, HWND_BOTTOM, pixelX, pixelY, 0, 0,
+                        SWP_NOACTIVATE | SWP_NOSIZE | SWP_SHOWWINDOW);
+                    // 同步 WPF 属性
+                    Left = targetLeft;
+                    Top = targetTop;
+                    System.Diagnostics.Debug.WriteLine($"[桌面层级] WorkerW 挂载 pos=({targetLeft},{targetTop}) px=({pixelX},{pixelY}) dpi=({dpiX},{dpiY})");
                 }
                 else
                 {
