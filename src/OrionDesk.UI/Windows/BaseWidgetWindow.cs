@@ -61,6 +61,18 @@ namespace OrionDesk.UI.Windows
         [DllImport("user32.dll")]
         private static extern bool IsWindowVisible(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern uint RegisterWindowMessage(string lpString);
 
@@ -87,6 +99,9 @@ namespace OrionDesk.UI.Windows
         private const int GWL_EXSTYLE = -20;
         private const int WS_EX_TOOLWINDOW = 0x00000080;
         private const int WS_EX_TRANSPARENT = 0x00000020;
+        private const int WS_EX_NOACTIVATE = 0x08000000;
+        private const uint WM_MOUSEACTIVATE = 0x0021;
+        private const int MA_NOACTIVATE = 3;
         private const uint SWP_NOACTIVATE = 0x0010;
         private const uint SWP_NOMOVE = 0x0002;
         private const uint SWP_NOSIZE = 0x0001;
@@ -95,6 +110,23 @@ namespace OrionDesk.UI.Windows
 
         private const uint WM_SPAWN_WORKERW = 0x052C;
         private const uint WM_DROPFILES = 0x0233;
+        private const uint WM_WINDOWPOSCHANGING = 0x0046;
+        private const int SW_SHOWNOACTIVATE = 4;
+        private const int SW_RESTORE = 9;
+        private const uint GW_HWNDNEXT = 2;
+        private const uint SWP_HIDEWINDOW = 0x0080;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WINDOWPOS
+        {
+            public IntPtr hwnd;
+            public IntPtr hwndInsertAfter;
+            public int x;
+            public int y;
+            public int cx;
+            public int cy;
+            public uint flags;
+        }
 
         // Explorer 重启检测
         private static uint _taskbarCreatedMsg;
@@ -370,6 +402,29 @@ namespace OrionDesk.UI.Windows
                 return IntPtr.Zero;
             }
 
+            // 点击组件后立刻推回底层（保持在应用下面，不会因点击提升层级）
+            if ((uint)msg == 0x0006) // WM_ACTIVATE
+            {
+                var hwnd2 = new WindowInteropHelper(this).Handle;
+                SetWindowPos(hwnd2, HWND_BOTTOM, 0, 0, 0, 0,
+                    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+            }
+
+            // 拦截 Win+D "显示桌面"：检测窗口被隐藏时立即恢复
+            if ((uint)msg == WM_WINDOWPOSCHANGING)
+            {
+                var wp = Marshal.PtrToStructure<WINDOWPOS>(lParam);
+                if ((wp.flags & SWP_HIDEWINDOW) != 0)
+                {
+                    // 取消隐藏，强制显示
+                    wp.flags &= ~SWP_HIDEWINDOW;
+                    wp.flags |= 0x0040; // SWP_SHOWWINDOW
+                    Marshal.StructureToPtr(wp, lParam, true);
+                    handled = true;
+                    return IntPtr.Zero;
+                }
+            }
+
             // 文件拖放处理
             if ((uint)msg == WM_DROPFILES && AcceptFileDrop)
             {
@@ -469,33 +524,59 @@ namespace OrionDesk.UI.Windows
         }
 
         /// <summary>
-        /// 查找桌面窗口
+        /// 查找桌面窗口（多层回退策略）
         /// </summary>
         private void FindDesktopWindows()
         {
-            // 方法：通过发送消息创建WorkerW窗口
             var progman = FindWindow("Progman", "Program Manager");
             if (progman == IntPtr.Zero) return;
 
-            // 发送消息让Progman创建WorkerW窗口
+            // 发送消息让 Progman 创建 WorkerW 窗口（发送两次确保生效）
+            SendMessageTimeout(progman, WM_SPAWN_WORKERW, IntPtr.Zero, IntPtr.Zero, 0, 1000, out _);
             SendMessageTimeout(progman, WM_SPAWN_WORKERW, IntPtr.Zero, IntPtr.Zero, 0, 1000, out _);
 
-            // 枚举所有窗口，找到WorkerW
+            // 方法1：枚举窗口，找包含 SHELLDLL_DefView 的窗口，再找其后的 WorkerW
             EnumWindows((hWnd, lParam) =>
             {
                 var shellWnd = FindWindowEx(hWnd, IntPtr.Zero, "SHELLDLL_DefView", null);
                 if (shellWnd != IntPtr.Zero)
                 {
-                    // 找到包含SHELLDLL_DefView的窗口，其下一个兄弟窗口就是WorkerW
                     var workerW = FindWindowEx(IntPtr.Zero, hWnd, "WorkerW", null);
                     if (workerW != IntPtr.Zero)
                     {
                         _workerWHandle = workerW;
-                        return false; // 停止枚举
+                        return false;
                     }
                 }
-                return true; // 继续枚举
+                return true;
             }, IntPtr.Zero);
+
+            if (_workerWHandle != IntPtr.Zero) return;
+
+            // 方法2：从 Progman 的下一个兄弟窗口开始，逐个查找 WorkerW
+            var hwnd = GetWindow(progman, GW_HWNDNEXT);
+            while (hwnd != IntPtr.Zero)
+            {
+                var className = new System.Text.StringBuilder(256);
+                GetClassName(hwnd, className, className.Capacity);
+                if (className.ToString() == "WorkerW")
+                {
+                    _workerWHandle = hwnd;
+                    return;
+                }
+                hwnd = GetWindow(hwnd, GW_HWNDNEXT);
+            }
+
+            // 方法3：直接 FindWindow 查找任意 WorkerW
+            var workerWDirect = FindWindow("WorkerW", null);
+            if (workerWDirect != IntPtr.Zero)
+            {
+                _workerWHandle = workerWDirect;
+                return;
+            }
+
+            // 方法4：回退到 Progman（至少能用）
+            _workerWHandle = progman;
         }
 
         #endregion

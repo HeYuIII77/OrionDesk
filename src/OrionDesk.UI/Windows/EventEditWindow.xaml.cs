@@ -26,6 +26,7 @@ namespace OrionDesk.UI.Windows
         public EventEditWindow(DateTime date, List<CalendarEvent> existingEvents)
         {
             InitializeComponent();
+            Topmost = true;
             InitComboBoxes();
 
             DialogTitle.Text = "添加事项";

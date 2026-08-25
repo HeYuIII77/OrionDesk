@@ -17,6 +17,7 @@ namespace OrionDesk.UI.Windows
         public WeatherDetailWindow(WeatherInfo weather)
         {
             InitializeComponent();
+            Topmost = true;
             Loaded += (s, e) => BuildContent(weather);
         }
 

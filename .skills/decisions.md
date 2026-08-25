@@ -355,3 +355,37 @@
 **Impact**: 移除 BaseWidgetWindow 的 Effect 属性设置，组件不再有投影效果
 
 **Status**: Active
+
+## 2026-08-25
+
+### Decision: WM_WINDOWPOSCHANGING 拦截 Win+D
+
+**Reason**: Win+D "显示桌面" 会隐藏 WorkerW 子窗口，定时器恢复有延迟（最长30秒），用户体验差
+
+**Impact**: WndProc 拦截 WM_WINDOWPOSCHANGING，检测 SWP_HIDEWINDOW 时立即取消隐藏，组件实时响应 Win+D
+
+**Status**: Active
+
+### Decision: FindDesktopWindows 4层回退策略
+
+**Reason**: 原始 EnumWindows 枚举方法在特定系统上无法找到 WorkerW，导致组件完全不显示
+
+**Impact**: FindDesktopWindows 重写为4层回退：EnumWindows → 兄弟窗口遍历 → FindWindow → Progman 回退
+
+**Status**: Active
+
+### Decision: WM_ACTIVATE 推回底层（非 WS_EX_NOACTIVATE）
+
+**Reason**: 用户要求组件永远在应用下面，点击不提升层级。WS_EX_NOACTIVATE 会阻止 TreeView 等子控件接收鼠标事件，导致文件夹映射无法双击打开文件
+
+**Impact**: WndProc 拦截 WM_ACTIVATE，激活后立即 SetWindowPos(HWND_BOTTOM) 推回底层。组件可正常交互但层级不变
+
+**Status**: Active
+
+### Decision: 对话框窗口 Topmost = true
+
+**Reason**: 对话框窗口与组件窗口同层级，被组件遮挡无法操作
+
+**Impact**: 所有 9 个对话框窗口（EventListWindow、EventEditWindow、WeatherDetailWindow、CmdLauncherSettingsWindow、DocSettingsWindow、QuickToolEditWindow、InputDialog、SettingsWindow、DiagnosticsWindow）设置 Topmost = true
+
+**Status**: Active

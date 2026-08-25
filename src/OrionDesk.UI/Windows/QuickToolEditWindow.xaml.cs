@@ -26,6 +26,7 @@ namespace OrionDesk.UI.Windows
         public QuickToolEditWindow()
         {
             InitializeComponent();
+            Topmost = true;
             InitTypeCombo();
             DialogTitle.Text = "添加快捷工具";
         }

@@ -12,6 +12,7 @@ namespace OrionDesk.UI.Windows
         public InputDialog(string title, string prompt, string defaultValue = "")
         {
             InitializeComponent();
+            Topmost = true;
             TitleText.Text = title;
             PromptText.Text = prompt;
             InputBox.Text = defaultValue;

@@ -1,10 +1,10 @@
 # Current Development Context
 
-**Last updated**: 2026-08-14
+**Last updated**: 2026-08-25
 
 ## Currently Working On
 
-- 稳定性修复（组件消失、位置偏移、拖放失效）
+- 桌面层级稳定性（Win+D、z-order、WorkerW 查找）
 
 ## Current Module
 
@@ -12,25 +12,28 @@
 
 ## Completed This Session
 
-### 拖放功能修复
-- ✅ 恢复 WM_DROPFILES 直接注册方式（在 SetDesktopLevel 之前注册）
-- ✅ 移除 DropOverlayWindow 集成（该方案返回 HTNOWHERE 导致系统不路由 WM_DROPFILES）
-- ✅ BaseWidgetWindow 恢复原始 WndProc 处理 WM_DROPFILES 消息
-- **Root Cause**: commit ba22b13 将拖放方式从直接注册改为 DropOverlayWindow，但 HTNOWHERE 使系统不路由消息
+### Win+D "显示桌面" 拦截
+- ✅ WndProc 拦截 WM_WINDOWPOSCHANGING，检测 SWP_HIDEWINDOW 时立即取消隐藏
+- ✅ 组件不会因 Win+D 消失
 
-### 组件消失问题修复
-- ✅ WorkerW 句柄有效性检查（IsWindow API 验证）
-- ✅ Explorer 重启检测（RegisterWindowMessage "TaskbarCreated"）
-- ✅ 定时检查机制（每 30 秒验证 WorkerW 句柄）
-- ✅ Explorer 重启后自动刷新桌面层级
-- **Root Cause**: Explorer 重启后 WorkerW 窗口被重建，缓存的旧句柄未失效
+### FindDesktopWindows 多层回退
+- ✅ 方法1：EnumWindows 枚举（原始逻辑）
+- ✅ 方法2：从 Progman 遍历兄弟窗口找 WorkerW
+- ✅ 方法3：FindWindow("WorkerW", null) 直接查找
+- ✅ 方法4：回退到 Progman（至少能用）
+- ✅ 解决 "WorkerW未找到" 导致组件不显示的问题
 
-### 组件位置偏移修复
-- ✅ 移除 BaseWidgetWindow 窗口级别的 DropShadowEffect
-- **Root Cause**: DropShadowEffect 的 BlurRadius=10 在 AllowsTransparency=true 窗口上导致视觉边界扩展
+### 组件层级锁定
+- ✅ WM_ACTIVATE 拦截：点击组件后立刻 SetWindowPos(HWND_BOTTOM) 推回底层
+- ✅ 组件始终在应用程序下面，点击不会提升层级
+- ✅ 不使用 WS_EX_NOACTIVATE（会阻止子控件接收事件）
 
-### 发布
-- ✅ dotnet publish 生成 72MB 自包含单文件 exe → publish/OrionDesk.UI.exe
+### 对话框窗口 Topmost
+- ✅ 所有 9 个对话框窗口设置 Topmost = true
+- ✅ EventListWindow、EventEditWindow、WeatherDetailWindow、CmdLauncherSettingsWindow、DocSettingsWindow、QuickToolEditWindow、InputDialog、SettingsWindow、DiagnosticsWindow
+
+### 配置清除
+- ✅ 用户要求清除 config.json，重新开始
 
 ## Not Yet Complete
 
@@ -44,5 +47,5 @@
 
 ## Next Steps
 
-- 验证修复效果（拖放、组件消失、位置偏移）
+- 验证 Win+D 拦截、z-order 稳定性、对话框层级
 - 继续 P1/P2/P3 优化

@@ -29,6 +29,7 @@ namespace OrionDesk.UI.Windows
         public SettingsWindow(WeatherSettings weatherSettings, WeatherService weatherService, int gitSyncRefreshMinutes = 10)
         {
             InitializeComponent();
+            Topmost = true;
 
             _weatherSettings = weatherSettings;
             _weatherService = weatherService;

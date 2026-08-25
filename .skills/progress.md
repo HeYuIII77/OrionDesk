@@ -617,3 +617,46 @@ Windows Explorer 重启后 WorkerW 窗口被重建，但代码缓存的旧句柄
 - ClockWidget.xaml — 移除模拟时钟 Canvas
 - ClockWidget.xaml.cs — 移除模拟时钟相关方法
 - ClockSettings.cs — 移除 Style 属性
+
+## 2026-08-25
+
+### Win+D "显示桌面" 修复
+
+### Completed
+- WndProc 拦截 WM_WINDOWPOSCHANGING，检测 SWP_HIDEWINDOW 时立即取消隐藏
+- 组件不会因 Win+D 消失
+
+### FindDesktopWindows 多层回退
+
+### Completed
+- FindDesktopWindows 重写，4 层回退策略
+- 方法1：EnumWindows 枚举（原始逻辑）
+- 方法2：从 Progman 遍历兄弟窗口，按类名找 WorkerW
+- 方法3：FindWindow("WorkerW", null) 直接查找
+- 方法4：回退到 Progman（至少能用）
+- 解决特定系统上 "WorkerW未找到" 导致组件不显示的问题
+
+### 组件层级锁定
+
+### Completed
+- WM_ACTIVATE 拦截：窗口被激活后立刻 SetWindowPos(HWND_BOTTOM) 推回底层
+- 组件始终在应用程序下面，点击不会提升层级
+- 不使用 WS_EX_NOACTIVATE（会阻止 TreeView 等子控件接收鼠标事件）
+
+### 对话框 Topmost
+
+### Completed
+- 所有 9 个对话框窗口设置 Topmost = true，确保在组件上面
+- EventListWindow、EventEditWindow、WeatherDetailWindow、CmdLauncherSettingsWindow、DocSettingsWindow、QuickToolEditWindow、InputDialog、SettingsWindow、DiagnosticsWindow
+
+### Modified
+- BaseWidgetWindow.cs — 添加 GetWindow/GetClassName/ShowWindow/IsIconic API、WM_WINDOWPOSCHANGING/WM_ACTIVATE 拦截、FindDesktopWindows 4层回退
+- EventListWindow.xaml.cs — 添加 Topmost = true
+- EventEditWindow.xaml.cs — 添加 Topmost = true
+- WeatherDetailWindow.xaml.cs — 添加 Topmost = true
+- CmdLauncherSettingsWindow.xaml.cs — 添加 Topmost = true
+- DocSettingsWindow.xaml.cs — 添加 Topmost = true
+- QuickToolEditWindow.xaml.cs — 添加 Topmost = true
+- InputDialog.xaml.cs — 添加 Topmost = true
+- SettingsWindow.xaml.cs — 添加 Topmost = true
+- DiagnosticsWindow.xaml.cs — 添加 Topmost = true

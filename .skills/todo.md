@@ -5,6 +5,7 @@
 - [ ] P1 续：右键菜单结构统一（功能操作 → 分隔线 → 刷新/设置 → 分隔线 → 锁定 → 分隔线 → 关闭组件）
 - [ ] P2：视觉统一（引用 App.xaml 配色资源 TertiaryTextBrush/SecondaryTextBrush 等、引用文本样式、标题栏统一 FontSize=12/Foreground=White/Margin=0,0,0,6）
 - [ ] 长时间运行稳定性验证（24h+ 内存/GDI 句柄监控）
+- [ ] 验证 Win+D 拦截 + z-order 稳定性 + 对话框层级
 
 ## Medium
 

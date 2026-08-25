@@ -14,6 +14,7 @@ namespace OrionDesk.UI.Windows
         public DocSettingsWindow(string currentPath, string title = "文档中心设置", string pathLabel = "文档目录")
         {
             InitializeComponent();
+            Topmost = true;
             Title = title;
             TitleText.Text = title;
             PathLabel.Text = pathLabel;

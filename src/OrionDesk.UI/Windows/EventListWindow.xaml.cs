@@ -35,6 +35,7 @@ namespace OrionDesk.UI.Windows
         public EventListWindow(DateTime date, List<CalendarEvent> events)
         {
             InitializeComponent();
+            Topmost = true;
             _date = date;
             _events = events;
             TitleText.Text = date.ToString("yyyy年M月d日 dddd");

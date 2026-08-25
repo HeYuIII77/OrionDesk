@@ -15,6 +15,7 @@ namespace OrionDesk.UI.Windows
         public CmdLauncherSettingsWindow(string name, string icon, string command, string workDir)
         {
             InitializeComponent();
+            Topmost = true;
             NameBox.Text = name;
             IconBox.Text = icon;
             CommandBox.Text = command;

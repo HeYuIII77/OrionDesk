@@ -160,3 +160,35 @@
 **Reproduction**: 启动 OrionDesk，文件夹映射组件根节点已展开但子目录不显示，需手动关闭再展开
 **Impact**: 启动时无法看到根目录下的文件和文件夹
 **Resolution**: IsExpanded=true 在 FolderTree.Items.Add() 之前设置，节点不在视觉树中导致懒加载不生效。调换顺序：先 Add 再 IsExpanded
+
+## Bug: Win+D "显示桌面" 导致组件消失（已修复）
+
+**Status**: Resolved — WndProc 拦截 WM_WINDOWPOSCHANGING
+**Reproduction**: 点击任务栏右下角"显示桌面"按钮或按 Win+D，组件消失
+**Impact**: 组件不可见，需要等待定时器恢复（最长30秒）
+**Root Cause**: Win+D 触发 Windows 隐藏所有窗口，包括 WorkerW 子窗口
+**Resolution**: WndProc 拦截 WM_WINDOWPOSCHANGING 消息，检测 SWP_HIDEWINDOW 标志时立即取消隐藏
+
+## Bug: FindDesktopWindows 找不到 WorkerW（已修复）
+
+**Status**: Resolved — 4层回退策略
+**Reproduction**: 特定系统上启动 OrionDesk，组件不显示，Debug 输出 "WorkerW未找到"
+**Impact**: 所有组件无法挂载到桌面层级
+**Root Cause**: 原始 EnumWindows 枚举方法在某些系统上无法找到 WorkerW 窗口
+**Resolution**: FindDesktopWindows 重写为4层回退：EnumWindows → 兄弟窗口遍历 → FindWindow 直接查找 → Progman 回退
+
+## Bug: 设置对话框被组件遮挡（已修复）
+
+**Status**: Resolved — 对话框设置 Topmost = true
+**Reproduction**: 右键组件打开设置窗口，设置窗口被其他组件遮挡
+**Impact**: 无法操作设置窗口
+**Root Cause**: 对话框窗口与组件窗口同层级，z-order 不确定
+**Resolution**: 所有 9 个对话框窗口设置 Topmost = true
+
+## Bug: 组件点击后层级提升到应用上面（已修复）
+
+**Status**: Resolved — WM_ACTIVATE 推回底层
+**Reproduction**: 点击组件后，组件跑到应用程序窗口上面
+**Impact**: 组件遮挡应用窗口
+**Root Cause**: Windows 激活窗口时自动提升 z-order
+**Resolution**: WndProc 拦截 WM_ACTIVATE，激活后立即 SetWindowPos(HWND_BOTTOM) 推回底层。注：不能用 WS_EX_NOACTIVATE，会阻止 TreeView 等子控件接收鼠标事件

@@ -19,6 +19,7 @@ namespace OrionDesk.UI.Windows
         public DiagnosticsWindow(DiagnosticsService diagnostics)
         {
             InitializeComponent();
+            Topmost = true;
             _diagnostics = diagnostics;
 
             // 订阅快照事件
