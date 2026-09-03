@@ -27,12 +27,14 @@ namespace OrionDesk.UI
         private readonly DiagnosticsService _diagnosticsService;
         private readonly List<BaseWidgetWindow> _activeWidgets = new List<BaseWidgetWindow>();
         private DiagnosticsWindow? _diagnosticsWindow;
+        private DesktopBallWindow? _desktopBallWindow;
         private bool _isExiting = false;
         private bool _isClosingAll = false;
 
         public MainWindow()
         {
             InitializeComponent();
+            Hide(); // 立即隐藏，防止启动时闪现白色窗口
 
             _widgetManager = new WidgetManager();
             _weatherService = new WeatherService();
@@ -63,6 +65,9 @@ namespace OrionDesk.UI
                     BaseWidgetWindow.IsAppClosing = true;
                     foreach (var widget in _activeWidgets.ToList())
                         widget.RequestClose();
+
+                    // 关闭桌面球
+                    _desktopBallWindow?.Close();
 
                     if (_trayIcon != null)
                     {
@@ -119,6 +124,15 @@ namespace OrionDesk.UI
                 // 启动诊断服务（组件恢复完成后）
                 _diagnosticsService.Start();
                 Log("[启动] 诊断服务已启动");
+
+                // 恢复桌面球
+                if (_widgetManager.Settings.ShowDesktopBall)
+                {
+                    var bx = _widgetManager.Settings.DesktopBallX;
+                    var by = _widgetManager.Settings.DesktopBallY;
+                    CreateDesktopBall(bx, by);
+                    Log("[启动] 桌面球已恢复");
+                }
             }
             catch (Exception ex)
             {
@@ -162,6 +176,9 @@ namespace OrionDesk.UI
             contextMenu.Items.Add("隐藏所有组件", null, (s, e) => HideAllWidgets());
 
             contextMenu.Items.Add(new ToolStripSeparator());
+
+            // 桌面球
+            contextMenu.Items.Add("桌面球", null, (s, e) => OpenDesktopBall());
 
             // 设置
             contextMenu.Items.Add("设置", null, (s, e) => OpenSettings());
@@ -346,6 +363,56 @@ namespace OrionDesk.UI
                 widget.SetVisible(false);
             }
             _widgetManager.Save();
+        }
+
+        /// <summary>
+        /// 打开桌面球
+        /// </summary>
+        private void OpenDesktopBall()
+        {
+            if (_desktopBallWindow == null)
+            {
+                var bx = _widgetManager.Settings.DesktopBallX;
+                var by = _widgetManager.Settings.DesktopBallY;
+                CreateDesktopBall(bx, by);
+            }
+            else
+            {
+                _desktopBallWindow.Activate();
+            }
+        }
+
+        /// <summary>
+        /// 创建桌面球实例
+        /// </summary>
+        private void CreateDesktopBall(double initX, double initY)
+        {
+            _desktopBallWindow = new DesktopBallWindow(initX, initY,
+                toggleTopmost: (onTop) =>
+                {
+                    foreach (var widget in _activeWidgets)
+                        widget.SetTopmost(onTop);
+                },
+                onPositionChanged: (x, y) =>
+                {
+                    _widgetManager.Settings.DesktopBallX = x;
+                    _widgetManager.Settings.DesktopBallY = y;
+                    _widgetManager.Save();
+                });
+            _desktopBallWindow.Closed += (s, e) =>
+            {
+                _desktopBallWindow = null;
+                _widgetManager.Settings.ShowDesktopBall = false;
+                _widgetManager.Save();
+            };
+            _desktopBallWindow.Show();
+
+            // 标记为已显示
+            if (!_widgetManager.Settings.ShowDesktopBall)
+            {
+                _widgetManager.Settings.ShowDesktopBall = true;
+                _widgetManager.Save();
+            }
         }
 
         /// <summary>

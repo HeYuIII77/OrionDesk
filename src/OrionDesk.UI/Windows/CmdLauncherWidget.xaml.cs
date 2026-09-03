@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using OrionDesk.BLL.Models;
 using OrionDesk.BLL.Services;
@@ -61,10 +62,9 @@ namespace OrionDesk.UI.Windows
             Title = _displayName;
             TitleText.Text = $"⚡ {_displayName}";
             IconText.Text = string.IsNullOrWhiteSpace(_icon) ? "🖥" : _icon;
-            CommandText.Text = string.IsNullOrWhiteSpace(_command) ? "右键设置" : $"> {_command}";
             LaunchButton.ToolTip = string.IsNullOrWhiteSpace(_command)
                 ? "右键 → 设置"
-                : $"点击启动: {_command}";
+                : "点击启动";
         }
 
         #endregion
@@ -80,13 +80,26 @@ namespace OrionDesk.UI.Windows
                 return;
             }
 
+            // 多行命令用 && 连接（每行一条命令）
+            var lines = _command.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .Select(l => l.Trim())
+                .Where(l => !string.IsNullOrEmpty(l))
+                .ToArray();
+            if (lines.Length == 0)
+            {
+                System.Windows.MessageBox.Show("请右键组件 → 设置", "提示",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            var cmdArgs = string.Join(" && ", lines);
+
             try
             {
                 var workDir = string.IsNullOrWhiteSpace(_workDir) ? @"C:\WINDOWS\system32" : _workDir;
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
-                    Arguments = $"/k {_command}",
+                    Arguments = $"/k {cmdArgs}",
                     WorkingDirectory = workDir,
                     UseShellExecute = true
                 });

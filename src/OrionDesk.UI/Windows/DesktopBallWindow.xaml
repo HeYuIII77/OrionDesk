@@ -1,0 +1,42 @@
+<Window x:Class="OrionDesk.UI.Windows.DesktopBallWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="桌面球"
+        Width="56" Height="56"
+        WindowStartupLocation="Manual"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        MouseMove="Window_MouseMove"
+        MouseLeftButtonUp="Window_MouseLeftButtonUp"
+        MouseDoubleClick="Window_MouseDoubleClick"
+        MouseEnter="Window_MouseEnter"
+        MouseLeave="Window_MouseLeave">
+    <Window.ContextMenu>
+        <ContextMenu>
+            <MenuItem Header="关闭桌面球" Click="Close_Click"/>
+        </ContextMenu>
+    </Window.ContextMenu>
+
+    <!-- 窗口56×56，球体48×48居中，留4px余量防止放大裁切 -->
+    <Border x:Name="BallBorder"
+            Background="#FFFFFFFF"
+            CornerRadius="24"
+            BorderBrush="#FF0078D4"
+            BorderThickness="1.5"
+            Width="48" Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            RenderTransformOrigin="0.5,0.5"
+            Cursor="Hand">
+        <Border.RenderTransform>
+            <ScaleTransform x:Name="BallScale" ScaleX="1" ScaleY="1"/>
+        </Border.RenderTransform>
+        <TextBlock Text="🖥️" FontSize="22"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+</Window>

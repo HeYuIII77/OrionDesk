@@ -1,39 +1,48 @@
 # Current Development Context
 
-**Last updated**: 2026-08-25
+**Last updated**: 2026-09-03
 
 ## Currently Working On
 
-- 桌面层级稳定性（Win+D、z-order、WorkerW 查找）
+- 桌面悬浮球功能完善
 
 ## Current Module
 
-- BaseWidgetWindow（组件窗口基类）
+- DesktopBallWindow（桌面悬浮球）
+- BaseWidgetWindow（组件层级控制）
 
 ## Completed This Session
 
-### Win+D "显示桌面" 拦截
-- ✅ WndProc 拦截 WM_WINDOWPOSCHANGING，检测 SWP_HIDEWINDOW 时立即取消隐藏
-- ✅ 组件不会因 Win+D 消失
+### CMD 启动器增强
+- ✅ 支持多条命令（每行一条，回车分隔，用 `&&` 连接执行）
+- ✅ 命令输入框改为多行（AcceptsReturn + TextWrapping）
+- ✅ 设置窗口增加示例提示
+- ✅ 移除图标下方命令文字显示
 
-### FindDesktopWindows 多层回退
-- ✅ 方法1：EnumWindows 枚举（原始逻辑）
-- ✅ 方法2：从 Progman 遍历兄弟窗口找 WorkerW
-- ✅ 方法3：FindWindow("WorkerW", null) 直接查找
-- ✅ 方法4：回退到 Progman（至少能用）
-- ✅ 解决 "WorkerW未找到" 导致组件不显示的问题
+### 桌面悬浮球
+- ✅ DesktopBallWindow 独立 Topmost 窗口（不继承 BaseWidgetWindow）
+- ✅ 单击拖动 + 双击切换组件层级（置顶/桌面层）
+- ✅ 边缘吸附（留40%在外面）
+- ✅ 悬停效果（缩放1.15x + 透明度 + 边框变色）
+- ✅ 位置持久化（AppSettings DesktopBallX/Y）
+- ✅ 启动时自动恢复桌面球
+- ✅ 置顶时组件背景变不透明（只改 alpha，保留原色）
+- ✅ 置顶时 WM_ACTIVATE 不推回底层（KeepTopmost 标志）
+- ✅ 点击其他应用自动退出置顶模式（Application.Deactivated）
 
-### 组件层级锁定
-- ✅ WM_ACTIVATE 拦截：点击组件后立刻 SetWindowPos(HWND_BOTTOM) 推回底层
-- ✅ 组件始终在应用程序下面，点击不会提升层级
-- ✅ 不使用 WS_EX_NOACTIVATE（会阻止子控件接收事件）
+### 组件层级控制
+- ✅ BaseWidgetWindow 新增 SetTopmost(bool) 公开方法
+- ✅ KeepTopmost 标志控制 WM_ACTIVATE 行为
+- ✅ _originalBackground 保存/恢复原始背景画刷
 
-### 对话框窗口 Topmost
-- ✅ 所有 9 个对话框窗口设置 Topmost = true
-- ✅ EventListWindow、EventEditWindow、WeatherDetailWindow、CmdLauncherSettingsWindow、DocSettingsWindow、QuickToolEditWindow、InputDialog、SettingsWindow、DiagnosticsWindow
+### 移除的功能
+- ✅ 删除 ShowDesktopWidget（被桌面球替代）
+- ✅ 删除文档中心组件（DocWidget，之前已移除）
 
-### 配置清除
-- ✅ 用户要求清除 config.json，重新开始
+### 其他
+- ✅ 修复 MainWindow 启动时白色窗口闪现（添加 Hide()）
+- ✅ README 更新（新增桌面球、CMD 多命令、移除文档中心）
+- ✅ 发布到 publish 目录
 
 ## Not Yet Complete
 
@@ -47,5 +56,5 @@
 
 ## Next Steps
 
-- 验证 Win+D 拦截、z-order 稳定性、对话框层级
+- 验证桌面球在多显示器环境下的行为
 - 继续 P1/P2/P3 优化

@@ -45,9 +45,6 @@
                                    Foreground="White"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock x:Name="CommandText" Text="右键设置"
-                               Foreground="#88FFFFFF" FontSize="11"
-                               HorizontalAlignment="Center" Margin="0,6,0,0"/>
                 </StackPanel>
             </Button>
         </Grid>

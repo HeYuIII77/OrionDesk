@@ -660,3 +660,55 @@ Windows Explorer 重启后 WorkerW 窗口被重建，但代码缓存的旧句柄
 - InputDialog.xaml.cs — 添加 Topmost = true
 - SettingsWindow.xaml.cs — 添加 Topmost = true
 - DiagnosticsWindow.xaml.cs — 添加 Topmost = true
+
+## 2026-09-03
+
+### CMD 启动器增强
+
+### Completed
+- 多条命令支持（每行一条，回车分隔，`&&` 连接执行）
+- 命令输入框改为多行（AcceptsReturn + TextWrapping + 滚动条）
+- 设置窗口增加示例提示文字
+- 移除图标下方命令文字显示
+
+### Modified
+- CmdLauncherWidget.xaml — 移除 CommandText TextBlock
+- CmdLauncherWidget.xaml.cs — LaunchButton_Click 拆分多行命令用 `&&` 连接、UpdateDisplay 移除 CommandText
+- CmdLauncherSettingsWindow.xaml — CommandBox 改为多行、增加示例提示、窗口高度调整
+- CmdLauncherSettingsWindow.xaml.cs — 验证逻辑改为逐行检查
+
+### 桌面悬浮球
+
+### Completed
+- DesktopBallWindow 独立 Topmost 窗口（不继承 BaseWidgetWindow）
+- 单击拖动 + 双击切换组件层级（置顶/桌面层）
+- 边缘吸附（留40%在外面，支持多显示器）
+- 悬停效果（缩放1.15x + 透明度0.75→1.0 + 蓝色边框高亮）
+- 位置持久化（AppSettings DesktopBallX/DesktopBallY）
+- 启动时自动恢复桌面球（LoadAndRestore 检查 ShowDesktopBall）
+- 右键菜单关闭桌面球（设置 ShowDesktopBall=false）
+- 置顶时组件背景变不透明（只改 alpha 通道，保留原色）
+- 置顶时 WM_ACTIVATE 不推回底层（KeepTopmost 标志）
+- 点击其他应用自动退出置顶模式（Application.Deactivated 事件）
+
+### Added
+- DesktopBallWindow.xaml/.cs — 桌面悬浮球组件
+
+### Modified
+- AppSettings.cs — 添加 ShowDesktopBall、DesktopBallX、DesktopBallY 属性
+- MainWindow.xaml.cs — 托盘菜单添加"桌面球"、CreateDesktopBall 方法、LoadAndRestore 自动恢复
+- BaseWidgetWindow.cs — 添加 SetTopmost 方法、KeepTopmost 标志、_originalBackground 字段、WM_ACTIVATE 检查 KeepTopmost
+
+### 移除的功能
+
+### Completed
+- 删除 ShowDesktopWidget.xaml/.cs（被桌面球替代）
+- MainWindow.xaml.cs 移除 showdesktop 相关注册
+
+### 其他修复
+
+### Completed
+- MainWindow 启动时白色窗口闪现修复（InitializeComponent 后添加 Hide()）
+
+### 发布
+- dotnet publish 生成 72MB 自包含单文件 exe → publish/OrionDesk.UI.exe

@@ -389,3 +389,53 @@
 **Impact**: 所有 9 个对话框窗口（EventListWindow、EventEditWindow、WeatherDetailWindow、CmdLauncherSettingsWindow、DocSettingsWindow、QuickToolEditWindow、InputDialog、SettingsWindow、DiagnosticsWindow）设置 Topmost = true
 
 **Status**: Active
+
+## 2026-09-03
+
+### Decision: CMD 启动器支持多条命令
+
+**Reason**: 用户需要启动程序后执行 exit 关闭 CMD 窗口，需要多条命令顺序执行
+
+**Impact**: 命令输入框改为多行，启动时按换行拆分用 `&&` 连接传给 cmd /k
+
+**Status**: Active
+
+### Decision: 桌面球采用层级切换而非隐藏窗口
+
+**Reason**: 隐藏其他窗口（SW_HIDE/SW_MINIMIZE）存在各种问题：CMD 白框残留、任务栏图标丢失、窗口恢复尺寸异常
+
+**Impact**: 桌面球双击切换组件层级（Topmost ↔ WorkerW），不操作其他窗口。简单可靠，无 edge case
+
+**Status**: Active
+
+### Decision: 桌面球独立于组件系统
+
+**Reason**: 桌面球需要 Topmost 始终在最上层，与组件的 WorkerW 层级逻辑不同
+
+**Impact**: DesktopBallWindow 不继承 BaseWidgetWindow，独立窗口，通过回调与 MainWindow 通信
+
+**Status**: Active
+
+### Decision: 置顶模式下背景变不透明
+
+**Reason**: 组件浮在应用上面时，半透明背景会透出下面的应用内容，视觉混乱
+
+**Impact**: SetTopmost(true) 时将背景 alpha 改为255，保存原画刷；SetTopmost(false) 时还原
+
+**Status**: Active
+
+### Decision: 置顶模式下 WM_ACTIVATE 不推回底层
+
+**Reason**: 组件置顶后点击会被 WM_ACTIVATE 处理推回底层，导致置顶失效
+
+**Impact**: BaseWidgetWindow 添加 KeepTopmost 标志，WM_ACTIVATE 处理时检查该标志
+
+**Status**: Active
+
+### Decision: 失去焦点自动退出置顶模式
+
+**Reason**: 用户点击其他应用时，组件应自动回到桌面层，无需手动双击桌面球
+
+**Impact**: DesktopBallWindow 监听 Application.Current.Deactivated 事件，自动调用 toggleTopmost(false)
+
+**Status**: Active

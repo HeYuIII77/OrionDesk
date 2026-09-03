@@ -206,6 +206,10 @@ namespace OrionDesk.UI.Windows
         // 应用退出标志（MainWindow 关闭前设置，允许组件关闭）
         internal static bool IsAppClosing { get; set; } = false;
 
+        // 置顶模式标志（桌面球切换为 true 时，WM_ACTIVATE 不推回底层）
+        internal bool KeepTopmost { get; set; } = false;
+        private System.Windows.Media.Brush? _originalBackground;
+
         // 单个组件主动关闭标志
         private bool _requestingClose = false;
 
@@ -402,8 +406,8 @@ namespace OrionDesk.UI.Windows
                 return IntPtr.Zero;
             }
 
-            // 点击组件后立刻推回底层（保持在应用下面，不会因点击提升层级）
-            if ((uint)msg == 0x0006) // WM_ACTIVATE
+            // 点击组件后立刻推回底层（置顶模式下跳过）
+            if ((uint)msg == 0x0006 && !KeepTopmost) // WM_ACTIVATE
             {
                 var hwnd2 = new WindowInteropHelper(this).Handle;
                 SetWindowPos(hwnd2, HWND_BOTTOM, 0, 0, 0, 0,
@@ -878,6 +882,36 @@ namespace OrionDesk.UI.Windows
         public void ToggleLock()
         {
             IsLocked = !IsLocked;
+        }
+
+        /// <summary>
+        /// 切换组件层级：true=置顶（在所有应用上面），false=恢复桌面层（在应用下面）
+        /// </summary>
+        public void SetTopmost(bool topmost)
+        {
+            KeepTopmost = topmost;
+            if (topmost)
+            {
+                Topmost = true;
+                // 置顶时背景改为不透明（保留原色，只改 alpha）
+                if (Content is System.Windows.Controls.Border border)
+                {
+                    _originalBackground = border.Background;
+                    if (border.Background is System.Windows.Media.SolidColorBrush brush)
+                    {
+                        var c = brush.Color;
+                        border.Background = new System.Windows.Media.SolidColorBrush(
+                            System.Windows.Media.Color.FromArgb(255, c.R, c.G, c.B));
+                    }
+                }
+            }
+            else
+            {
+                // 恢复原始背景
+                if (Content is System.Windows.Controls.Border border && _originalBackground != null)
+                    border.Background = _originalBackground;
+                SetDesktopLevel();
+            }
         }
 
         /// <summary>

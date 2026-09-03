@@ -27,6 +27,21 @@ namespace OrionDesk.BLL.Models
         public int GitSyncRefreshMinutes { get; set; } = 10;
 
         /// <summary>
+        /// 是否显示桌面球
+        /// </summary>
+        public bool ShowDesktopBall { get; set; } = false;
+
+        /// <summary>
+        /// 桌面球 X 坐标
+        /// </summary>
+        public double DesktopBallX { get; set; } = -1;
+
+        /// <summary>
+        /// 桌面球 Y 坐标
+        /// </summary>
+        public double DesktopBallY { get; set; } = -1;
+
+        /// <summary>
         /// 是否开机启动
         /// </summary>
         public bool StartWithWindows { get; set; } = false;

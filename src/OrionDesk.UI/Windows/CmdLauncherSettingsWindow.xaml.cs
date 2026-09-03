@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 
 namespace OrionDesk.UI.Windows
@@ -30,9 +31,12 @@ namespace OrionDesk.UI.Windows
                 NameBox.Focus();
                 return;
             }
-            if (string.IsNullOrWhiteSpace(CommandBox.Text))
+            // 检查是否至少有一条非空命令
+            var hasCommand = CommandBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .Any(l => !string.IsNullOrWhiteSpace(l));
+            if (!hasCommand)
             {
-                System.Windows.MessageBox.Show("请输入启动命令", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("请输入至少一条命令", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
                 CommandBox.Focus();
                 return;
             }
